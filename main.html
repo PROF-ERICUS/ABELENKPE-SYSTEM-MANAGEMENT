@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Church Attendance System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --primary: #1d4ed8;
+      --primary-dark: #163ea9;
+      --success: #15803d;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #0f172a;
+      color: #fff;
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .brand span { color: #93c5fd; }
+
+    .nav-btn {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      text-align: left;
+      padding: 14px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      font-size: 0.98rem;
+      transition: 0.2s ease;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .title h1 {
+      font-size: 1.7rem;
+      margin-bottom: 4px;
+    }
+
+    .title p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .session-badge {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stat-card h3 {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 1.9rem;
+      font-weight: 800;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-light {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      max-width: 330px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.94rem;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-transform: uppercase;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .pill.present {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill.absent {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .pill.closed {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .pill.open {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .member-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .member-card h4 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .muted { color: var(--muted); }
+
+    .record-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .print-report {
+      display: none;
+    }
+
+    .report-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 12px;
+    }
+
+    .report-logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .report-title-wrap h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: #000;
+    }
+
+    .report-title-wrap p {
+      margin: 3px 0;
+      color: #222;
+      font-size: 0.95rem;
+    }
+
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .report-summary .summary-box {
+      border: 1px solid #000;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+    }
+
+    .report-summary .summary-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .report-table th,
+    .report-table td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: left;
+      font-size: 0.92rem;
+      color: #000;
+    }
+
+    .report-table th {
+      background: #f2f2f2;
+      color: #000;
+    }
+
+    .report-footer {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .sign-box {
+      width: 45%;
+      margin-top: 30px;
+    }
+
+    .sign-line {
+      border-top: 1px solid #000;
+      margin-top: 40px;
+      padding-top: 6px;
+      font-size: 0.92rem;
+      color: #000;
+    }
+
+    @media (max-width: 980px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+      .report-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 820px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 270px;
+        z-index: 20;
+        transition: 0.25s ease;
+      }
+      .sidebar.show { left: 0; }
+      .mobile-toggle { display: inline-block; }
+      .content { padding: 18px; }
+    }
+
+    @media (max-width: 600px) {
+      .stats { grid-template-columns: 1fr; }
+      th, td { font-size: 0.88rem; }
+      .title h1 { font-size: 1.35rem; }
+      .report-summary { grid-template-columns: 1fr; }
+      .report-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .report-footer {
+        flex-direction: column;
+      }
+      .sign-box {
+        width: 100%;
+      }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #printArea,
+      #printArea * {
+        visibility: visible;
+      }
+
+      #printArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+        padding: 24px;
+      }
+
+      #printAbsenteesBtn {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">Church <span>Attendance</span></div>
+      <button class="nav-btn" data-section="dashboard" data-role="admin">Admin Dashboard</button>
+      <button class="nav-btn" data-section="member-registration" data-role="admin">Member Registration</button>
+      <button class="nav-btn" data-section="attendance" data-role="admin">Attendance Control</button>
+      <button class="nav-btn" data-section="absentees" data-role="admin">Absentees</button>
+      <button class="nav-btn" data-section="records" data-role="admin">Church Records</button>
+      <button class="nav-btn active" data-section="member-home" data-role="member">Member Home</button>
+      <button class="nav-btn" data-section="member-self-register" data-role="member">Member Registration</button>
+      <button class="nav-btn" data-section="member-search" data-role="member">Search Members</button>
+      <button class="nav-btn" data-section="member-attendance" data-role="member">Mark Attendance</button>
+      <button class="nav-btn" data-section="member-birthdays" data-role="member">Birthdays</button>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div class="title">
+          <button class="mobile-toggle" id="menuToggle">☰ Menu</button>
+          <h1>Church Attendance System</h1>
+          <p>Abelenkpe Seventh-day Adventist Church.</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-light" id="switchAdminView">Admin Login</button>
+          <button class="btn btn-light" id="switchMemberView">Member View</button>
+          <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
+          <div class="session-badge" id="sessionStatus">Attendance Closed</div>
+          <div class="session-badge" id="registrationStatus">Registration Closed</div>
+        </div>
+      </div>
+
+      <section class="stats">
+        <div class="card stat-card">
+          <h3>Total Members</h3>
+          <div class="value" id="totalMembers">0</div>
+        </div>
+        <div class="card stat-card">
+          <h3>Present Today</h3>
+          <div class="value" id="presentToday">0</div>
+        </div>
+        <div class="card stat-card">
+          <h3>Absentees</h3>
+          <div class="value" id="absentToday">0</div>
+        </div>
+        <div class="card stat-card">
+          <h3>Birthdays This Month</h3>
+          <div class="value" id="birthdaysMonth">0</div>
+        </div>
+      </section>
+
+      <section class="section" id="admin-login">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Admin Login</div>
+            <form id="adminLoginForm">
+              <div class="field">
+                <label>Admin Email</label>
+                <input type="email" id="adminEmail" placeholder="Enter admin email" required />
+              </div>
+              <div class="field">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="Enter password" required />
+              </div>
+              <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Login as Admin</button>
+              </div>
+            </form>
+            <p class="muted" style="margin-top:12px;"> </p>
+          </div>
+          <div class="card">
+            <div class="section-title">Access Note</div>
+            <p class="muted">Members do not need login. Only admin sections are protected with login in this version.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="dashboard">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Quick Actions</div>
+            <div class="btn-row">
+              <button class="btn btn-success" id="openAttendanceBtn">Open Attendance</button>
+              <button class="btn btn-danger" id="closeAttendanceBtn">Close Attendance</button>
+              <button class="btn btn-light" id="markAllPresentBtn">Mark All Present</button>
+              <button class="btn btn-warning" id="openRegistrationBtn">Open Registration</button>
+              <button class="btn btn-danger" id="closeRegistrationBtn">Close Registration</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">This Month Birthdays</div>
+            <div id="birthdayList" class="muted">No birthday data yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-registration">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Register Member</div>
+            <form id="memberForm">
+              <div class="field">
+                <label>Full Name</label>
+                <input type="text" id="fullName" required />
+              </div>
+              <div class="field">
+                <label>Registered Number</label>
+                <input type="text" id="memberNumber" required />
+              </div>
+              <div class="field">
+                <label>Gender</label>
+                <select id="gender" required>
+                  <option value="">Select gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Sabbath School Class</label>
+                <input type="text" id="memberClass" required />
+              </div>
+              <div class="field">
+                <label>Date of Birth</label>
+                <input type="date" id="dob" />
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="text" id="phone" placeholder="For absentee check-up message" />
+              </div>
+              <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Save Member</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Registered Members</div>
+            <div id="memberCards"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-home">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Member Welcome</div>
+            <p class="muted" style="margin-bottom:14px;">Members can search for other registered members, mark attendance when session is open, and check birthday celebrations.</p>
+            <div class="btn-row">
+              <button class="btn btn-warning" onclick="goToSection('member-self-register')">Register as Member</button>
+              <button class="btn btn-primary" onclick="goToSection('member-search')">Search Members</button>
+              <button class="btn btn-success" onclick="goToSection('member-attendance')">Mark Attendance</button>
+              <button class="btn btn-light" onclick="goToSection('member-birthdays')">View Birthdays</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Session Status</div>
+            <p id="memberHomeAttendanceText" class="muted">Attendance is currently closed.</p>
+            <p id="memberHomeRegistrationText" class="muted" style="margin-top:10px;">Registration is currently closed.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-self-register">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Member Self Registration</div>
+            <p class="muted" id="memberRegistrationNote" style="margin-bottom:12px;">Registration is closed. Please wait for admin to open registration.</p>
+            <form id="memberSelfRegisterForm">
+              <div class="field">
+                <label>Full Name</label>
+                <input type="text" id="selfFullName" required />
+              </div>
+              <div class="field">
+                <label>Registered Number</label>
+                <input type="text" id="selfMemberNumber" required />
+              </div>
+              <div class="field">
+                <label>Gender</label>
+                <select id="selfGender" required>
+                  <option value="">Select gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Sabbath School Class</label>
+                <input type="text" id="selfMemberClass" required />
+              </div>
+              <div class="field">
+                <label>Date of Birth</label>
+                <input type="date" id="selfDob"  />
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="text" id="selfPhone" placeholder="Optional phone number" />
+              </div>
+              <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Submit Registration</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="section-title">Registration Note</div>
+            <p class="muted">Use the same registered number later for member search and attendance.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-search">
+        <div class="card">
+          <div class="toolbar">
+            <div class="section-title">Search Members by Name or Registered Number</div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Type full name or registered number..." />
+          </div>
+          <div class="table-wrap" id="searchTableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Number</th>
+                  <th>Gender</th>
+                  <th>Class</th>
+                  <th>DOB</th>
+                </tr>
+              </thead>
+              <tbody id="searchResults"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-attendance">
+        <div class="card">
+          <div class="toolbar">
+            <div class="section-title">Member Self Attendance</div>
+            <span id="memberAttendancePill" class="pill closed">Closed</span>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="field">
+                <label>Enter Registered Number</label>
+                <input type="text" id="memberAttendanceNumber" placeholder="Enter your registered number" />
+              </div>
+              <div class="btn-row" style="margin-top:12px;">
+                <button class="btn btn-success" id="memberMarkAttendanceBtn">Mark My Attendance</button>
+              </div>
+            </div>
+            <div>
+              <div class="section-title" style="font-size:0.95rem;">Member Result</div>
+              <div id="memberAttendanceResult" class="muted">Enter your registered number to mark attendance.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="member-birthdays">
+        <div class="card">
+          <div class="section-title">Member Birthdays</div>
+          <div id="memberBirthdaysList" class="muted">No birthdays this month.</div>
+        </div>
+      </section>
+
+      <section class="section" id="attendance">
+        <div class="card">
+          <div class="toolbar">
+            <div class="section-title">Attendance Register</div>
+            <span id="attendancePill" class="pill closed">Closed</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Number</th>
+                  <th>Class</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="absentees">
+        <div class="card">
+          <div class="section-title">Absentees After Attendance Close</div>
+          <div id="absenteeList" class="muted">No absentees yet.</div>
+        </div>
+        <div style="margin-top:15px;">
+          <button class="btn btn-primary" id="printAbsenteesBtn">Print Absentees</button>
+        </div>
+        <div id="printArea" class="print-report"></div>
+      </section>
+
+      <section class="section" id="records">
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">Upload Church / Secretary Records</div>
+            <form id="recordForm">
+              <div class="field">
+                <label>Record Title</label>
+                <input type="text" id="recordTitle" required />
+              </div>
+              <div class="field">
+                <label>Category</label>
+                <select id="recordCategory" required>
+                  <option value="">Select category</option>
+                  <option>Church Record</option>
+                  <option>Secretary Record</option>
+                  <option>Minutes</option>
+                  <option>Report</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Select File</label>
+                <input type="file" id="recordFile" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Upload Record</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Stored Records</div>
+            <div id="recordsList" class="muted">No records uploaded yet.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+    let currentView = 'member';
+    let isAdminLoggedIn = false;
+    let attendanceOpen = JSON.parse(localStorage.getItem('attendance_open') || 'false');
+    let registrationOpen = JSON.parse(localStorage.getItem('registration_open') || 'false');
+
+    let members = JSON.parse(localStorage.getItem('church_members') || '[]');
+    let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
+    let records = JSON.parse(localStorage.getItem('church_records') || '[]');
+
+    const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST CHURCH";
+    const CHURCH_LOGO = "sda logo.png";
+    // Example:
+    // const CHURCH_LOGO = "logo.png";
+
+    function goToSection(sectionId) {
+      if (["dashboard", "member-registration", "attendance", "absentees", "records"].includes(sectionId) && !isAdminLoggedIn) {
+        currentView = 'admin';
+        showAdminLoginOnly();
+        return;
+      }
+
+      navButtons.forEach(b => b.classList.remove('active'));
+      sections.forEach(section => section.classList.remove('active'));
+
+      const targetBtn = document.querySelector(`.nav-btn[data-section="${sectionId}"]`);
+      if (targetBtn) targetBtn.classList.add('active');
+
+      const targetSection = document.getElementById(sectionId);
+      if (targetSection) targetSection.classList.add('active');
+
+      sidebar.classList.remove('show');
+    }
+
+    window.goToSection = goToSection;
+
+    function showAdminLoginOnly() {
+      navButtons.forEach(btn => {
+        btn.style.display = btn.dataset.role === 'admin' ? 'block' : 'none';
+        btn.classList.remove('active');
+      });
+      sections.forEach(section => section.classList.remove('active'));
+      document.getElementById('admin-login').classList.add('active');
+      adminLogoutBtn.classList.add('hidden');
+      sidebar.classList.remove('show');
+    }
+
+    function updateViewMode() {
+      navButtons.forEach(btn => {
+        const role = btn.dataset.role;
+        btn.style.display = role === currentView ? 'block' : 'none';
+      });
+
+      if (currentView === 'admin') {
+        if (isAdminLoggedIn) {
+          adminLogoutBtn.classList.remove('hidden');
+          goToSection('dashboard');
+        } else {
+          showAdminLoginOnly();
+        }
+      } else {
+        adminLogoutBtn.classList.add('hidden');
+        goToSection('member-home');
+      }
+    }
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        goToSection(btn.dataset.section);
+      });
+    });
+
+    document.getElementById('switchAdminView').addEventListener('click', () => {
+      currentView = 'admin';
+      showAdminLoginOnly();
+    });
+
+    document.getElementById('switchMemberView').addEventListener('click', () => {
+      currentView = 'member';
+      updateViewMode();
+    });
+
+    adminLogoutBtn.addEventListener('click', () => {
+      isAdminLoggedIn = false;
+      currentView = 'member';
+      document.getElementById('adminLoginForm').reset();
+      updateViewMode();
+    });
+
+    document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('adminEmail').value.trim().toLowerCase();
+      const password = document.getElementById('adminPassword').value.trim();
+
+      if (email === 'admin@sda.com' && password === '4449') {
+        isAdminLoggedIn = true;
+        currentView = 'admin';
+        updateViewMode();
+      } else {
+        alert('Invalid admin login details.');
+      }
+    });
+
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('show');
+    });
+
+    function saveMembers() {
+      localStorage.setItem('church_members', JSON.stringify(members));
+    }
+
+    function saveAttendance() {
+      localStorage.setItem('church_attendance', JSON.stringify(attendance));
+    }
+
+    function saveRecords() {
+      localStorage.setItem('church_records', JSON.stringify(records));
+    }
+
+    const memberForm = document.getElementById('memberForm');
+    const memberSelfRegisterForm = document.getElementById('memberSelfRegisterForm');
+
+    memberForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById('fullName').value.trim();
+      const memberNumber = document.getElementById('memberNumber').value.trim();
+      const gender = document.getElementById('gender').value;
+      const memberClass = document.getElementById('memberClass').value.trim();
+      const dob = document.getElementById('dob').value || null;
+      const phone = document.getElementById('phone').value.trim();
+
+      const existing = members.find(m => m.memberNumber.toLowerCase() === memberNumber.toLowerCase());
+      if (existing) {
+        alert('Registered number already exists.');
+        return;
+      }
+
+      members.push({
+        id: Date.now(),
+        fullName,
+        memberNumber,
+        gender,
+        memberClass,
+        dob,
+        phone
+      });
+
+      saveMembers();
+      memberForm.reset();
+      renderAll();
+    });
+
+    memberSelfRegisterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      if (!registrationOpen) {
+        alert('Registration is currently closed.');
+        return;
+      }
+
+      const fullName = document.getElementById('selfFullName').value.trim();
+      const memberNumber = document.getElementById('selfMemberNumber').value.trim();
+      const gender = document.getElementById('selfGender').value;
+      const memberClass = document.getElementById('selfMemberClass').value.trim();
+      const dob = document.getElementById('dob').value || null;
+      const phone = document.getElementById('selfPhone').value.trim();
+
+      const existing = members.find(m => m.memberNumber.toLowerCase() === memberNumber.toLowerCase());
+      if (existing) {
+        alert('Registered number already exists.');
+        return;
+      }
+
+      members.push({
+        id: Date.now(),
+        fullName,
+        memberNumber,
+        gender,
+        memberClass,
+        dob,
+        phone
+      });
+
+      saveMembers();
+      memberSelfRegisterForm.reset();
+      renderAll();
+      alert('Member registration successful.');
+      goToSection('member-search');
+    });
+
+    function renderMembers() {
+      const wrap = document.getElementById('memberCards');
+      if (!members.length) {
+        wrap.innerHTML = '<p class="muted">No members registered yet.</p>';
+        return;
+      }
+
+      wrap.innerHTML = members.map(member => `
+        <div class="member-card">
+          <h4>${member.fullName}</h4>
+          <p class="muted">No: ${member.memberNumber}</p>
+          <p class="muted">Gender: ${member.gender}</p>
+          <p class="muted">Class: ${member.memberClass}</p>
+          <div class="btn-row" style="margin-top:10px;">
+            <button class="btn btn-light" onclick="editMember(${member.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteMember(${member.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.deleteMember = function(id) {
+      if (!confirm('Delete this member?')) return;
+      members = members.filter(member => member.id !== id);
+      attendance = attendance.filter(a => a.memberId !== id);
+      saveMembers();
+      saveAttendance();
+      renderAll();
+    }
+
+    window.editMember = function(id) {
+      const member = members.find(m => m.id === id);
+      if (!member) return;
+
+      document.getElementById('fullName').value = member.fullName;
+      document.getElementById('memberNumber').value = member.memberNumber;
+      document.getElementById('gender').value = member.gender;
+      document.getElementById('memberClass').value = member.memberClass;
+      document.getElementById('dob').value = member.dob;
+      document.getElementById('phone').value = member.phone || '';
+
+      members = members.filter(m => m.id !== id);
+      saveMembers();
+      renderAll();
+      goToSection('member-registration');
+    }
+
+    function renderSearchResults() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const tbody = document.getElementById('searchResults');
+      const searchTableWrap = document.getElementById('searchTableWrap');
+
+      if (!query) {
+        tbody.innerHTML = '';
+        searchTableWrap.classList.add('hidden');
+        return;
+      }
+
+      searchTableWrap.classList.remove('hidden');
+
+      const filtered = members.filter(member =>
+        member.memberNumber.toLowerCase().includes(query) ||
+        member.fullName.toLowerCase().includes(query)
+      );
+
+      tbody.innerHTML = filtered.map(member => `
+        <tr>
+          <td>${member.fullName}</td>
+          <td>${member.memberNumber}</td>
+          <td>${member.gender}</td>
+          <td>${member.memberClass}</td>
+          <td>${member.dob}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" class="muted">No member found.</td></tr>';
+    }
+
+    let searchTimeout;
+    let countdownInterval;
+    let searchSecondsLeft = 30;
+
+    function ensureSearchCountdownUI() {
+      const toolbar = document.querySelector('#member-search .toolbar');
+      if (!toolbar || document.getElementById('searchCountdown')) return;
+
+      const timer = document.createElement('div');
+      timer.id = 'searchCountdown';
+      timer.className = 'pill closed';
+      timer.textContent = 'Waiting for search';
+      toolbar.appendChild(timer);
+    }
+
+    function updateSearchCountdownUI() {
+      const timer = document.getElementById('searchCountdown');
+      const input = document.getElementById('searchInput');
+      if (!timer || !input) return;
+
+      if (!input.value.trim()) {
+        timer.textContent = 'Waiting for search';
+        timer.className = 'pill closed';
+        return;
+      }
+
+      timer.textContent = `Clears in ${searchSecondsLeft}s`;
+      timer.className = 'pill open';
+    }
+
+    function stopSearchCountdown() {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    function clearSearchResultsFully() {
+      const input = document.getElementById('searchInput');
+      const tbody = document.getElementById('searchResults');
+      const searchTableWrap = document.getElementById('searchTableWrap');
+
+      input.value = '';
+      tbody.innerHTML = '';
+      searchTableWrap.classList.add('hidden');
+      stopSearchCountdown();
+      searchSecondsLeft = 30;
+      updateSearchCountdownUI();
+    }
+
+    function startSearchCountdown() {
+      stopSearchCountdown();
+
+      const input = document.getElementById('searchInput');
+      if (!input.value.trim()) {
+        searchSecondsLeft = 30;
+        updateSearchCountdownUI();
+        return;
+      }
+
+      searchSecondsLeft = 30;
+      updateSearchCountdownUI();
+
+      countdownInterval = setInterval(() => {
+        searchSecondsLeft -= 1;
+        if (searchSecondsLeft <= 0) {
+          clearInterval(countdownInterval);
+          searchSecondsLeft = 0;
+        }
+        updateSearchCountdownUI();
+      }, 1000);
+
+      searchTimeout = setTimeout(() => {
+        clearSearchResultsFully();
+      }, 30000);
+    }
+
+    ensureSearchCountdownUI();
+    document.getElementById('searchTableWrap').classList.add('hidden');
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      renderSearchResults();
+      startSearchCountdown();
+    });
+
+    document.getElementById('searchInput').addEventListener('focus', () => {
+      if (document.getElementById('searchInput').value.trim()) {
+        startSearchCountdown();
+      } else {
+        updateSearchCountdownUI();
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', () => {
+      if (document.getElementById('searchInput').value.trim()) {
+        startSearchCountdown();
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('blur', () => {
+      updateSearchCountdownUI();
+    });
+
+    function renderRegistrationState() {
+      const registrationStatus = document.getElementById('registrationStatus');
+      const memberHomeRegistrationText = document.getElementById('memberHomeRegistrationText');
+      const memberRegistrationNote = document.getElementById('memberRegistrationNote');
+      const form = document.getElementById('memberSelfRegisterForm');
+
+      if (registrationStatus) {
+        registrationStatus.textContent = registrationOpen ? 'Registration Open' : 'Registration Closed';
+      }
+
+      if (memberHomeRegistrationText) {
+        memberHomeRegistrationText.textContent = registrationOpen
+          ? 'Registration is open. New members can register now.'
+          : 'Registration is currently closed.';
+      }
+
+      if (memberRegistrationNote) {
+        memberRegistrationNote.textContent = registrationOpen
+          ? 'Members can register themselves here without admin login.'
+          : 'Registration is closed. Please wait for admin to open registration.';
+      }
+
+      if (form) {
+        const fields = form.querySelectorAll('input, select, button');
+        fields.forEach(field => {
+          field.disabled = !registrationOpen;
+        });
+      }
+    }
+
+    function ensureAttendanceRecords() {
+      members.forEach(member => {
+        const exists = attendance.find(a => a.memberId === member.id);
+        if (!exists) {
+          attendance.push({ memberId: member.id, present: false });
+        }
+      });
+      attendance = attendance.filter(a => members.some(m => m.id === a.memberId));
+      saveAttendance();
+    }
+
+    function renderAttendance() {
+      ensureAttendanceRecords();
+      const tbody = document.getElementById('attendanceTable');
+      const pill = document.getElementById('attendancePill');
+      const sessionStatus = document.getElementById('sessionStatus');
+      const memberAttendancePill = document.getElementById('memberAttendancePill');
+      const memberHomeAttendanceText = document.getElementById('memberHomeAttendanceText');
+
+      pill.textContent = attendanceOpen ? 'Open' : 'Closed';
+      pill.className = `pill ${attendanceOpen ? 'open' : 'closed'}`;
+      sessionStatus.textContent = attendanceOpen ? 'Attendance Open' : 'Attendance Closed';
+
+      if (memberAttendancePill) {
+        memberAttendancePill.textContent = attendanceOpen ? 'Open' : 'Closed';
+        memberAttendancePill.className = `pill ${attendanceOpen ? 'open' : 'closed'}`;
+      }
+
+      if (memberHomeAttendanceText) {
+        memberHomeAttendanceText.textContent = attendanceOpen
+          ? 'Attendance is open. Members can now mark their attendance.'
+          : 'Attendance is currently closed.';
+      }
+
+      tbody.innerHTML = members.map(member => {
+        const record = attendance.find(a => a.memberId === member.id);
+        return `
+          <tr>
+            <td>${member.fullName}</td>
+            <td>${member.memberNumber}</td>
+            <td>${member.memberClass}</td>
+            <td><span class="pill ${record && record.present ? 'present' : 'absent'}">${record && record.present ? 'Present' : 'Absent'}</span></td>
+            <td>
+              <button class="btn ${record && record.present ? 'btn-light' : 'btn-success'}" ${attendanceOpen ? '' : 'disabled'} onclick="toggleAttendance(${member.id})">
+                ${record && record.present ? 'Undo' : 'Mark Present'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="5" class="muted">No members available.</td></tr>';
+    }
+
+    window.toggleAttendance = function(memberId) {
+      if (!attendanceOpen) {
+        alert('Attendance is closed.');
+        return;
+      }
+      const record = attendance.find(a => a.memberId === memberId);
+      if (record) record.present = !record.present;
+      saveAttendance();
+      renderAll();
+    }
+
+    document.getElementById('openAttendanceBtn').addEventListener('click', () => {
+      attendanceOpen = true;
+      localStorage.setItem('attendance_open', true);
+      attendance.forEach(a => a.present = false);
+      saveAttendance();
+      renderAll();
+    });
+
+    document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
+      attendanceOpen = false;
+      localStorage.setItem('attendance_open', false);
+      renderAll();
+      renderAbsentees();
+    });
+
+    document.getElementById('markAllPresentBtn').addEventListener('click', () => {
+      if (!attendanceOpen) {
+        alert('Open attendance first.');
+        return;
+      }
+      attendance.forEach(a => a.present = true);
+      saveAttendance();
+      renderAll();
+    });
+
+    document.getElementById('openRegistrationBtn').addEventListener('click', () => {
+      registrationOpen = true;
+      localStorage.setItem('registration_open', true);
+      renderRegistrationState();
+    });
+
+    document.getElementById('closeRegistrationBtn').addEventListener('click', () => {
+      registrationOpen = false;
+      localStorage.setItem('registration_open', false);
+      renderRegistrationState();
+    });
+
+    document.getElementById('memberMarkAttendanceBtn').addEventListener('click', () => {
+      const number = document.getElementById('memberAttendanceNumber').value.trim().toLowerCase();
+      const result = document.getElementById('memberAttendanceResult');
+
+      if (!attendanceOpen) {
+        result.innerHTML = '<span class="muted">Attendance is closed. Please wait for admin to open it.</span>';
+        return;
+      }
+
+      if (!number) {
+        result.innerHTML = '<span class="muted">Please enter your registered number.</span>';
+        return;
+      }
+
+      const member = members.find(m => m.memberNumber.toLowerCase() === number);
+      if (!member) {
+        result.innerHTML = '<span class="muted">Member number not found.</span>';
+        return;
+      }
+
+      const record = attendance.find(a => a.memberId === member.id);
+      if (record) record.present = true;
+      saveAttendance();
+      result.innerHTML = `<strong>${member.fullName}</strong> has been marked present successfully.`;
+      renderAll();
+    });
+
+    function renderAbsentees() {
+      const wrap = document.getElementById('absenteeList');
+      if (attendanceOpen) {
+        wrap.innerHTML = '<p class="muted">Close attendance first to see absentees.</p>';
+        return;
+      }
+
+      const absentees = members.filter(member => {
+        const record = attendance.find(a => a.memberId === member.id);
+        return !record || !record.present;
+      });
+
+      if (!absentees.length) {
+        wrap.innerHTML = '<p class="muted">No absentees. Everyone is present.</p>';
+        return;
+      }
+
+      wrap.innerHTML = absentees.map(member => {
+        const phone = member.phone || 'No phone number';
+        const message = `Hello ${member.fullName}, we missed you at church attendance today. We hope you are fine. Please let us know how you are doing. God bless you.`;
+        const whatsappLink = member.phone ? `https://wa.me/${member.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(message)}` : '#';
+        return `
+          <div class="member-card">
+            <h4>${member.fullName}</h4>
+            <p class="muted">Number: ${member.memberNumber}</p>
+            <p class="muted">Phone: ${phone}</p>
+            <p style="margin:10px 0;">${message}</p>
+            ${member.phone ? `<a class="btn btn-success" href="${whatsappLink}" target="_blank">Send Check-up Message</a>` : '<span class="muted">No phone number to send message.</span>'}
+          </div>
+        `;
+      }).join('');
+    }
+
+    const recordForm = document.getElementById('recordForm');
+    recordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('recordTitle').value.trim();
+      const category = document.getElementById('recordCategory').value;
+      const fileInput = document.getElementById('recordFile');
+      const file = fileInput.files[0];
+
+      if (!file) return;
+
+      const fileURL = URL.createObjectURL(file);
+      records.push({
+        id: Date.now(),
+        title,
+        category,
+        fileName: file.name,
+        fileURL
+      });
+
+      saveRecords();
+      recordForm.reset();
+      renderRecords();
+    });
+
+    function renderRecords() {
+      const wrap = document.getElementById('recordsList');
+      if (!records.length) {
+        wrap.innerHTML = '<p class="muted">No records uploaded yet.</p>';
+        return;
+      }
+
+      wrap.innerHTML = records.map(record => `
+        <div class="record-item">
+          <div>
+            <strong>${record.title}</strong>
+            <p class="muted">${record.category} • ${record.fileName}</p>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-light" href="${record.fileURL}" download="${record.fileName}">Download</a>
+            <button class="btn btn-danger" onclick="deleteRecord(${record.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.deleteRecord = function(id) {
+      records = records.filter(record => record.id !== id);
+      saveRecords();
+      renderRecords();
+    }
+
+    function renderBirthdays() {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const thisMonthBirthdays = members.filter(member => {
+        if (!member.dob) return false;
+        return new Date(member.dob).getMonth() + 1 === month;
+      });
+
+      document.getElementById('birthdaysMonth').textContent = thisMonthBirthdays.length;
+      const birthdayMarkup = thisMonthBirthdays.length
+        ? thisMonthBirthdays.map(member => `<div class="record-item"><div><strong>${member.fullName}</strong><p class="muted">Birthday: ${member.dob}</p></div></div>`).join('')
+        : '<p class="muted">No birthdays this month.</p>';
+
+      document.getElementById('birthdayList').innerHTML = birthdayMarkup;
+      const memberBirthdaysList = document.getElementById('memberBirthdaysList');
+      if (memberBirthdaysList) memberBirthdaysList.innerHTML = birthdayMarkup;
+    }
+
+    function updateStats() {
+      const presentCount = attendance.filter(a => a.present).length;
+      document.getElementById('totalMembers').textContent = members.length;
+      document.getElementById('presentToday').textContent = presentCount;
+      document.getElementById('absentToday').textContent = Math.max(members.length - presentCount, 0);
+    }
+
+    function formatDisplayDate(dateValue) {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return dateValue || '';
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function buildPrintableAbsenteeReport() {
+      const printArea = document.getElementById('printArea');
+
+      const absentees = members.filter(member => {
+        const record = attendance.find(a => a.memberId === member.id);
+        return !record || !record.present;
+      });
+
+      const totalMembers = members.length;
+      const totalPresent = attendance.filter(a => a.present).length;
+      const totalAbsent = absentees.length;
+
+      const reportDate = new Date().toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const logoMarkup = CHURCH_LOGO
+        ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="report-logo">`
+        : `<div class="report-logo" style="display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;">LOGO</div>`;
+
+      const rows = absentees.length
+        ? absentees.map((member, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${member.fullName}</td>
+              <td>${member.memberNumber}</td>
+              <td>${member.gender}</td>
+              <td>${member.memberClass}</td>
+              <td>${formatDisplayDate(member.dob)}</td>
+              <td>${member.phone || 'N/A'}</td>
+            </tr>
+          `).join('')
+        : `
+          <tr>
+            <td colspan="7" style="text-align:center;">No absentees. Everyone is present.</td>
+          </tr>
+        `;
+
+      printArea.innerHTML = `
+        <div class="report-header">
+          ${logoMarkup}
+          <div class="report-title-wrap">
+            <h2>${CHURCH_NAME}</h2>
+            <p><strong>Official Absentee Report</strong></p>
+            <p>Date: ${reportDate}</p>
+          </div>
+        </div>
+
+        <div class="report-summary">
+          <div class="summary-box">
+            <strong>Total Members</strong>
+            <span>${totalMembers}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Attendance</strong>
+            <span>${totalPresent}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Absentees</strong>
+            <span>${totalAbsent}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Attendance Status</strong>
+            <span>${attendanceOpen ? 'Open' : 'Closed'}</span>
+          </div>
+        </div>
+
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Full Name</th>
+              <th>Registered Number</th>
+              <th>Gender</th>
+              <th>Class</th>
+              <th>Date of Birth</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+
+        <div class="report-footer">
+          <div class="sign-box">
+            <div class="sign-line">Prepared By</div>
+          </div>
+          <div class="sign-box">
+            <div class="sign-line">Authorized Signature</div>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('printAbsenteesBtn').addEventListener('click', () => {
+      buildPrintableAbsenteeReport();
+      window.print();
+    });
+
+    function formatBirthdayDate(dateValue) {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function getTodayBirthdays() {
+  const now = new Date();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+
+  return members.filter(member => {
+    if (!member.dob) return false;
+    const dob = new Date(member.dob);
+    return (
+      !isNaN(dob.getTime()) &&
+      dob.getMonth() + 1 === todayMonth &&
+      dob.getDate() === todayDay
+    );
+  });
+}
+
+function getUpcomingBirthdays(daysAhead = 7) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  return members
+    .filter(member => member.dob)
+    .map(member => {
+      const dob = new Date(member.dob);
+      if (isNaN(dob.getTime())) return null;
+
+      let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+      if (nextBirthday < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+        nextBirthday = new Date(currentYear + 1, dob.getMonth(), dob.getDate());
+      }
+
+      const diffTime = nextBirthday - new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      return {
+        ...member,
+        nextBirthday,
+        diffDays
+      };
+    })
+    .filter(Boolean)
+    .filter(member => member.diffDays >= 0 && member.diffDays <= daysAhead)
+    .sort((a, b) => a.diffDays - b.diffDays);
+}
+
+function showBirthdayReminder() {
+  const todayBirthdays = getTodayBirthdays();
+
+  if (!todayBirthdays.length) return;
+
+  const names = todayBirthdays.map(member => member.fullName).join(', ');
+  alert(`🎉 Birthday Reminder\n\nToday is the birthday of: ${names}`);
+}
+
+function renderBirthdayReminderCard() {
+  const dashboard = document.getElementById('dashboard');
+  if (!dashboard) return;
+
+  let existingCard = document.getElementById('birthdayReminderCard');
+  if (existingCard) existingCard.remove();
+
+  const todayBirthdays = getTodayBirthdays();
+  const upcomingBirthdays = getUpcomingBirthdays(7);
+
+  const wrapper = document.createElement('div');
+  wrapper.id = 'birthdayReminderCard';
+  wrapper.className = 'card';
+  wrapper.style.marginTop = '16px';
+
+  let content = '';
+
+  if (todayBirthdays.length) {
+    content += `
+      <div style="margin-bottom:16px;">
+        <div class="section-title">Today's Birthday Reminder</div>
+        ${todayBirthdays.map(member => `
+          <div class="member-card">
+            <h4>🎉 ${member.fullName}</h4>
+            <p class="muted">Class: ${member.memberClass || 'N/A'}</p>
+            <p class="muted">Birthday: ${formatBirthdayDate(member.dob)}</p>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  if (upcomingBirthdays.length) {
+    content += `
+      <div>
+        <div class="section-title">Upcoming Birthdays</div>
+        ${upcomingBirthdays.map(member => `
+          <div class="record-item">
+            <div>
+              <strong>${member.fullName}</strong>
+              <p class="muted">${formatBirthdayDate(member.dob)} • In ${member.diffDays} day${member.diffDays === 1 ? '' : 's'}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  if (!content) {
+    content = `
+      <div class="section-title">Birthday Reminder</div>
+      <p class="muted">No birthdays today or within the next 7 days.</p>
+    `;
+  }
+
+  wrapper.innerHTML = content;
+  dashboard.appendChild(wrapper);
+}
+
+ function renderAll() {
+  renderRegistrationState();
+  renderMembers();
+  renderSearchResults();
+  renderAttendance();
+  renderAbsentees();
+  renderRecords();
+  renderBirthdays();
+  renderBirthdayReminderCard();
+  updateStats();
+}
+
+    updateViewMode();
+renderAll();
+showBirthdayReminder();
+  </script>
+</body>
+</html>

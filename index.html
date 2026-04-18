@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome | Church Attendance System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #1d4ed8;
+      --primary-dark: #0f172a;
+      --secondary: #60a5fa;
+      --white: #ffffff;
+      --glass: rgba(255, 255, 255, 0.12);
+      --glass-border: rgba(255, 255, 255, 0.22);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1d4ed8, #60a5fa);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    .welcome-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .welcome-card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1050px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      padding: 42px 32px;
+      overflow: hidden;
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .welcome-left {
+      width: 100%;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: #fff;
+      padding: 12px;
+      animation: spinLogo 8s linear infinite;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .logo-placeholder {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #fff;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      animation: spinLogo 8s linear infinite;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    @keyframes spinLogo {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 2.7rem;
+      line-height: 1.15;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      font-size: 1.04rem;
+      line-height: 1.7;
+      opacity: 0.96;
+      margin-bottom: 24px;
+      max-width: 640px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .btn {
+      border: none;
+      text-decoration: none;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.96rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-light {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-light:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .welcome-right {
+      width: 100%;
+    }
+
+    .announcement-box {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .announcement-head {
+      padding: 16px 18px;
+      font-weight: 700;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.12);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .announcement-slider {
+      position: relative;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .announcement-item {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px 22px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.7s ease;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.7;
+    }
+
+    .announcement-item.active {
+      opacity: 1;
+      transform: translateX(0);
+      position: relative;
+    }
+
+    .quick-info {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+
+    .info-box strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .info-box span {
+      font-size: 0.9rem;
+      opacity: 0.94;
+    }
+
+    .footer-note {
+      margin-top: 26px;
+      font-size: 0.94rem;
+      opacity: 0.92;
+    }
+
+    @media (max-width: 991px) {
+      .welcome-card {
+        padding: 34px 24px;
+      }
+
+      .welcome-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .welcome-left,
+      .welcome-right {
+        text-align: center;
+      }
+
+      .logo-wrap {
+        justify-content: center;
+      }
+
+      .subtitle {
+        max-width: 100%;
+      }
+
+      .action-row {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .welcome-page {
+        padding: 16px;
+      }
+
+      .welcome-card {
+        border-radius: 22px;
+        padding: 28px 18px;
+      }
+
+      .title {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 0.98rem;
+      }
+
+      .quick-info {
+        grid-template-columns: 1fr;
+      }
+
+      .announcement-slider {
+        min-height: 130px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .welcome-card {
+        padding: 22px 14px;
+        border-radius: 18px;
+      }
+
+      .logo,
+      .logo-placeholder {
+        width: 100px;
+        height: 100px;
+        font-size: 0.95rem;
+      }
+
+      .badge {
+        font-size: 0.8rem;
+        padding: 7px 12px;
+      }
+
+      .title {
+        font-size: 1.55rem;
+      }
+
+      .subtitle {
+        font-size: 0.93rem;
+        line-height: 1.6;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 13px 16px;
+        font-size: 0.92rem;
+      }
+
+      .action-row {
+        flex-direction: column;
+      }
+
+      .announcement-head {
+        font-size: 0.95rem;
+        padding: 14px 14px;
+      }
+
+      .announcement-slider {
+        min-height: 120px;
+        padding: 10px;
+      }
+
+      .announcement-item {
+        font-size: 0.92rem;
+        padding: 18px 12px;
+        line-height: 1.6;
+      }
+
+      .footer-note {
+        font-size: 0.88rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .title {
+        font-size: 1.35rem;
+      }
+
+      .logo,
+      .logo-placeholder {
+        width: 84px;
+        height: 84px;
+      }
+
+      .announcement-item {
+        font-size: 0.88rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome-page">
+    <div class="overlay"></div>
+
+    <div class="welcome-card">
+      <div class="welcome-grid">
+        <div class="welcome-left">
+          <div class="logo-wrap" id="logoWrap"></div>
+
+          <div class="badge">Church Attendance System</div>
+
+          <h1 class="title" id="churchTitle">Welcome to Our Church</h1>
+
+          <p class="subtitle">
+            A place of worship, fellowship, faith and spiritual growth. We are happy to have you here. Stay informed with our latest church announcements and upcoming birthdays, and enter the church system from here.
+          </p>
+
+          <div class="action-row">
+            <a href="main.html" class="btn btn-primary">Enter Church System</a>
+            <a href="main.html" class="btn btn-light">Go to Member Area</a>
+          </div>
+
+          <p class="footer-note">We are glad to have you here. God bless you.</p>
+        </div>
+
+        <div class="welcome-right">
+          <div class="announcement-box">
+            <div class="announcement-head">Church Announcements</div>
+            <div class="announcement-slider" id="announcementSlider"></div>
+          </div>
+
+          <div class="announcement-box" style="margin-top:18px;">
+            <div class="announcement-head">Upcoming Birthdays</div>
+            <div class="announcement-slider" id="birthdaySlider"></div>
+          </div>
+
+          <div class="quick-info">
+            <div class="info-box">
+              <strong>Worship</strong>
+              <span>Join us in praise and prayer</span>
+            </div>
+            <div class="info-box">
+              <strong>Fellowship</strong>
+              <span>Grow together as one family</span>
+            </div>
+            <div class="info-box">
+              <strong>Service</strong>
+              <span>Serve with love and purpose</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
+    const CHURCH_LOGO = "sda logo.png";
+
+    const CHURCH_ANNOUNCEMENTS = [
+      "Welcome to our worship service. The Lord bless you richly.",
+      "Midweek service comes off on Wednesday at 6:30 PM.",
+      "Choir rehearsal will be held after service this Sabbath.",
+      "All members are encouraged to be punctual for Sabbath School.",
+      "Youth fellowship meeting comes off this Sunday at 4:00 PM."
+    ];
+
+    const logoWrap = document.getElementById("logoWrap");
+    const churchTitle = document.getElementById("churchTitle");
+    const announcementSlider = document.getElementById("announcementSlider");
+
+    churchTitle.textContent = `Welcome to ${CHURCH_NAME}`;
+
+    logoWrap.innerHTML = CHURCH_LOGO
+      ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="logo">`
+      : `<div class="logo-placeholder">LOGO</div>`;
+
+    if (!CHURCH_ANNOUNCEMENTS.length) {
+      announcementSlider.innerHTML = `<div class="announcement-item active">No announcements available at the moment.</div>`;
+    } else {
+      announcementSlider.innerHTML = CHURCH_ANNOUNCEMENTS.map((item, index) => `
+        <div class="announcement-item ${index === 0 ? 'active' : ''}">${item}</div>
+      `).join("");
+    }
+
+    let currentAnnouncement = 0;
+    const items = document.querySelectorAll("#announcementSlider .announcement-item");
+
+    if (items.length > 1) {
+      setInterval(() => {
+        items.forEach(item => item.classList.remove("active"));
+        currentAnnouncement = (currentAnnouncement + 1) % items.length;
+        items[currentAnnouncement].classList.add("active");
+      }, 3500);
+    }
+
+    function getStoredMembers() {
+      return JSON.parse(localStorage.getItem('church_members') || '[]');
+    }
+
+    function formatBirthdayShort(dateValue) {
+      if (!dateValue) return '';
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function getUpcomingBirthdays(daysAhead = 30) {
+      const members = getStoredMembers();
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const currentYear = today.getFullYear();
+
+      return members
+        .filter(member => member.dob)
+        .map(member => {
+          const dob = new Date(member.dob);
+          if (isNaN(dob.getTime())) return null;
+
+          let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+
+          if (nextBirthday < today) {
+            nextBirthday = new Date(currentYear + 1, dob.getMonth(), dob.getDate());
+          }
+
+          const diffTime = nextBirthday - today;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          return {
+            ...member,
+            diffDays
+          };
+        })
+        .filter(Boolean)
+        .filter(member => member.diffDays >= 0 && member.diffDays <= daysAhead)
+        .sort((a, b) => a.diffDays - b.diffDays);
+    }
+
+    function renderBirthdaySlider() {
+      const slider = document.getElementById("birthdaySlider");
+      if (!slider) return;
+
+      const upcoming = getUpcomingBirthdays(30);
+
+      if (!upcoming.length) {
+        slider.innerHTML = `
+          <div class="announcement-item active">
+            No upcoming birthdays at the moment.
+          </div>
+        `;
+        return;
+      }
+
+      slider.innerHTML = upcoming.map((m, i) => `
+        <div class="announcement-item ${i === 0 ? 'active' : ''}">
+          🎂 <strong>${m.fullName}</strong><br>
+          ${formatBirthdayShort(m.dob)}
+          <br>
+          <small style="opacity:0.9;">In ${m.diffDays} day${m.diffDays === 1 ? '' : 's'}</small>
+        </div>
+      `).join("");
+    }
+
+    function startBirthdaySlider() {
+      const items = document.querySelectorAll("#birthdaySlider .announcement-item");
+      if (items.length <= 1) return;
+
+      let index = 0;
+
+      setInterval(() => {
+        items.forEach(i => i.classList.remove("active"));
+        index = (index + 1) % items.length;
+        items[index].classList.add("active");
+      }, 4000);
+    }
+
+    renderBirthdaySlider();
+    startBirthdaySlider();
+  </script>
+</body>
+</html>
