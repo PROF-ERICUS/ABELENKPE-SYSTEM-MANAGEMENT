@@ -498,7 +498,10 @@
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <button class="btn btn-light" id="switchAdminView">Admin Login</button>
           <button class="btn btn-light" id="switchMemberView">Member View</button>
+           <button class="btn btn-light" id="switchKidsView">Kids View</button>
           <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
+          
+      
           <div class="session-badge" id="sessionStatus">Attendance Closed</div>
           <div class="session-badge" id="registrationStatus">Registration Closed</div>
         </div>
@@ -554,6 +557,7 @@
           <div class="card">
             <div class="section-title">Quick Actions</div>
             <div class="btn-row">
+              
               <button class="btn btn-success" id="openAttendanceBtn">Open Attendance</button>
               <button class="btn btn-danger" id="closeAttendanceBtn">Close Attendance</button>
               <button class="btn btn-light" id="markAllPresentBtn">Mark All Present</button>
@@ -690,14 +694,16 @@
           <div class="table-wrap" id="searchTableWrap">
             <table>
               <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Number</th>
-                  <th>Gender</th>
-                  <th>Class</th>
-                  <th>DOB</th>
-                </tr>
-              </thead>
+  <tr>
+    <th>Name</th>
+    <th>Number</th>
+    <th>Gender</th>
+    <th>Class</th>
+    <th>DOB</th>
+    <th>Type</th>
+    <th>Note</th>
+  </tr>
+</thead>
               <tbody id="searchResults"></tbody>
             </table>
           </div>
@@ -821,8 +827,9 @@ let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
 
 
     let members = JSON.parse(localStorage.getItem('church_members') || '[]');
-    let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
-    let records = JSON.parse(localStorage.getItem('church_records') || '[]');
+let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
+let records = JSON.parse(localStorage.getItem('church_records') || '[]');
+let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
 
     const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST CHURCH";
     const CHURCH_LOGO = "sda logo.png";
@@ -895,6 +902,9 @@ let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
       currentView = 'member';
       updateViewMode();
     });
+    document.getElementById('switchKidsView').addEventListener('click', () => {
+  window.location.href = 'kids.html';
+});
 
     adminLogoutBtn.addEventListener('click', () => {
       isAdminLoggedIn = false;
@@ -1052,34 +1062,126 @@ let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
       goToSection('member-registration');
     }
 
-    function renderSearchResults() {
-      const query = document.getElementById('searchInput').value.trim().toLowerCase();
-      const tbody = document.getElementById('searchResults');
-      const searchTableWrap = document.getElementById('searchTableWrap');
+   function renderSearchResults() {
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  const tbody = document.getElementById('searchResults');
+  const searchTableWrap = document.getElementById('searchTableWrap');
 
-      if (!query) {
-        tbody.innerHTML = '';
-        searchTableWrap.classList.add('hidden');
-        return;
-      }
+  if (!query) {
+    tbody.innerHTML = '';
+    searchTableWrap.classList.add('hidden');
+    return;
+  }
 
-      searchTableWrap.classList.remove('hidden');
+  searchTableWrap.classList.remove('hidden');
 
-      const filtered = members.filter(member =>
-        member.memberNumber.toLowerCase().includes(query) ||
-        member.fullName.toLowerCase().includes(query)
+  const matchedMembers = members.filter(member =>
+    (member.memberNumber || '').toLowerCase().includes(query) ||
+    (member.fullName || '').toLowerCase().includes(query)
+  );
+
+  const matchedKids = kidsRecords.filter(kid =>
+    (kid.number || '').toLowerCase().includes(query) ||
+    (kid.name || '').toLowerCase().includes(query) ||
+    (kid.phone || '').toLowerCase().includes(query)
+  );
+
+  let rows = [];
+
+  matchedMembers.forEach(member => {
+    const relatedKids = kidsRecords.filter(kid => {
+      const memberNumber = (member.memberNumber || '').trim().toLowerCase();
+      const kidNumber = (kid.number || '').trim().toLowerCase();
+      const guardianPhone = (kid.phone || '').trim().toLowerCase();
+
+      return (
+        (memberNumber && kidNumber && memberNumber === kidNumber) ||
+        (memberNumber && guardianPhone && memberNumber === guardianPhone)
       );
+    });
 
-      tbody.innerHTML = filtered.map(member => `
+    rows.push(`
+      <tr>
+        <td>${member.fullName}</td>
+        <td>${member.memberNumber}</td>
+        <td>${member.gender || 'N/A'}</td>
+        <td>${member.memberClass || 'N/A'}</td>
+        <td>${member.dob || 'N/A'}</td>
+        <td><span class="pill open">Member</span></td>
+        <td>${
+          relatedKids.length
+            ? `Parent/Guardian of: ${relatedKids.map(k => k.name).join(', ')}`
+            : 'Church member'
+        }</td>
+      </tr>
+    `);
+
+    relatedKids.forEach(kid => {
+      rows.push(`
+        <tr>
+          <td>${kid.name}</td>
+          <td>${kid.number || kid.phone || 'N/A'}</td>
+          <td>${kid.gender || 'N/A'}</td>
+          <td>${kid.kidClass || 'N/A'}</td>
+          <td>${kid.dob || 'N/A'}</td>
+          <td><span class="pill present">Kid</span></td>
+          <td>Child linked to member ${member.fullName} as parent/guardian</td>
+        </tr>
+      `);
+    });
+  });
+
+  matchedKids.forEach(kid => {
+    const alreadyShown = rows.some(row => row.includes(`>${kid.name}</td>`));
+    if (alreadyShown) return;
+
+    const relatedMembers = members.filter(member => {
+      const memberNumber = (member.memberNumber || '').trim().toLowerCase();
+      const kidNumber = (kid.number || '').trim().toLowerCase();
+      const guardianPhone = (kid.phone || '').trim().toLowerCase();
+
+      return (
+        (memberNumber && kidNumber && memberNumber === kidNumber) ||
+        (memberNumber && guardianPhone && memberNumber === guardianPhone)
+      );
+    });
+
+    rows.push(`
+      <tr>
+        <td>${kid.name}</td>
+        <td>${kid.number || kid.phone || 'N/A'}</td>
+        <td>${kid.gender || 'N/A'}</td>
+        <td>${kid.kidClass || 'N/A'}</td>
+        <td>${kid.dob || 'N/A'}</td>
+        <td><span class="pill present">Kid</span></td>
+        <td>${
+          relatedMembers.length
+            ? `Child of/under guardian: ${relatedMembers.map(m => m.fullName).join(', ')}`
+            : 'Kid record'
+        }</td>
+      </tr>
+    `);
+
+    relatedMembers.forEach(member => {
+      const memberAlreadyShown = rows.some(row => row.includes(`>${member.fullName}</td>`) && row.includes('Member'));
+      if (memberAlreadyShown) return;
+
+      rows.push(`
         <tr>
           <td>${member.fullName}</td>
           <td>${member.memberNumber}</td>
-          <td>${member.gender}</td>
-          <td>${member.memberClass}</td>
-          <td>${member.dob}</td>
+          <td>${member.gender || 'N/A'}</td>
+          <td>${member.memberClass || 'N/A'}</td>
+          <td>${member.dob || 'N/A'}</td>
+          <td><span class="pill open">Member</span></td>
+          <td>Parent/Guardian linked to kid ${kid.name}</td>
         </tr>
-      `).join('') || '<tr><td colspan="5" class="muted">No member found.</td></tr>';
-    }
+      `);
+    });
+  });
+
+  tbody.innerHTML = rows.join('') || '<tr><td colspan="7" class="muted">No member or kid found.</td></tr>';
+}
 
     let searchTimeout;
     let countdownInterval;
@@ -1487,6 +1589,8 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
      const totalMembers = members.length;
 const totalPresent = attendance.filter(a => a.present).length;
 const totalAbsent = absentees.length;
+const totalMale = members.filter(member => (member.gender || '').toLowerCase() === 'male').length;
+const totalFemale = members.filter(member => (member.gender || '').toLowerCase() === 'female').length;
 const openedTime = attendanceOpenedAt ? formatDisplayDate(attendanceOpenedAt) + ' ' + new Date(attendanceOpenedAt).toLocaleTimeString() : 'N/A';
 const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + ' ' + new Date(attendanceClosedAt).toLocaleTimeString() : 'N/A';
 
@@ -1532,6 +1636,14 @@ const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + 
   <div class="summary-box">
     <strong>Total Members</strong>
     <span>${totalMembers}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Total Male Members</strong>
+    <span>${totalMale}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Total Female Members</strong>
+    <span>${totalFemale}</span>
   </div>
   <div class="summary-box">
     <strong>Total Members Present</strong>
