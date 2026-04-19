@@ -1438,12 +1438,22 @@
       if (memberBirthdaysList) memberBirthdaysList.innerHTML = birthdayMarkup;
     }
 
-    function updateStats() {
-      const presentCount = attendance.filter(a => a.present).length;
-      document.getElementById('totalMembers').textContent = members.length;
-      document.getElementById('presentToday').textContent = presentCount;
-      document.getElementById('absentToday').textContent = Math.max(members.length - presentCount, 0);
-    }
+ function updateStats() {
+  const totalMembers = members.length;
+  const presentCount = attendance.filter(a => a.present).length;
+
+  document.getElementById('totalMembers').textContent = totalMembers;
+
+  if (!attendanceOpen || presentCount === 0) {
+    document.getElementById('presentToday').textContent = 0;
+    document.getElementById('absentToday').textContent = 0;
+    return;
+  }
+
+  document.getElementById('presentToday').textContent = presentCount;
+  document.getElementById('absentToday').textContent = Math.max(totalMembers - presentCount, 0);
+}
+    
 
     function formatDisplayDate(dateValue) {
       const date = new Date(dateValue);
