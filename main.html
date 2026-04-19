@@ -499,6 +499,7 @@
           <button class="btn btn-light" id="switchAdminView">Admin Login</button>
           <button class="btn btn-light" id="switchMemberView">Member View</button>
            <button class="btn btn-light" id="switchKidsView">Kids View</button>
+           <button class="btn btn-light" id="switchTrendView">Trend View</button>
           <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
           
       
@@ -826,11 +827,43 @@ let attendanceOpenedAt = localStorage.getItem('attendance_opened_at') || '';
 let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
 
 
-    let members = JSON.parse(localStorage.getItem('church_members') || '[]');
+   let members = JSON.parse(localStorage.getItem('church_members') || '[]');
 let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
 let records = JSON.parse(localStorage.getItem('church_records') || '[]');
+let memberAttendanceHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
 let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
 
+function saveMemberAttendanceHistory() {
+  localStorage.setItem('church_member_attendance_history', JSON.stringify(memberAttendanceHistory));
+}
+
+function archiveMemberAttendanceSession() {
+  const today = new Date();
+  const sessionDate = today.toISOString().split('T')[0];
+
+  const alreadySaved = memberAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
+  if (alreadySaved) return;
+
+  const snapshot = {
+    sessionDate,
+    openedAt: attendanceOpenedAt || '',
+    closedAt: attendanceClosedAt || new Date().toISOString(),
+    records: members.map(member => {
+      const record = attendance.find(a => a.memberId === member.id);
+      return {
+        memberId: member.id,
+        fullName: member.fullName,
+        memberNumber: member.memberNumber,
+        gender: member.gender || '',
+        memberClass: member.memberClass || '',
+        present: !!(record && record.present)
+      };
+    })
+  };
+
+  memberAttendanceHistory.push(snapshot);
+  saveMemberAttendanceHistory();
+}
     const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST CHURCH";
     const CHURCH_LOGO = "sda logo.png";
     // Example:
@@ -904,6 +937,9 @@ let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]'
     });
     document.getElementById('switchKidsView').addEventListener('click', () => {
   window.location.href = 'kids.html';
+});
+document.getElementById('switchTrendView').addEventListener('click', () => {
+  window.location.href = 'trend.html';
 });
 
     adminLogoutBtn.addEventListener('click', () => {
@@ -1390,12 +1426,14 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
   renderAll();
 });
 
-   document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
+  document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
   attendanceOpen = false;
   attendanceClosedAt = new Date().toISOString();
 
   localStorage.setItem('attendance_open', false);
   localStorage.setItem('attendance_closed_at', attendanceClosedAt);
+
+  archiveMemberAttendanceSession();
 
   renderAll();
   renderAbsentees();
