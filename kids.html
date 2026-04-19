@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kids System | Church Attendance System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --primary: #1d4ed8;
+      --primary-dark: #163ea9;
+      --success: #15803d;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .title h1 {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    .title p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-light {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stat-card h3 {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 1.7rem;
+      font-weight: 800;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      font-size: 0.95rem;
+      background: #fff;
+      font-family: inherit;
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      max-width: 330px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .record-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .record-card h4 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 10px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .pill.present {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill.absent {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .pill.open {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .pill.closed {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .notice {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff7ed;
+      color: #9a3412;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .mini-list > div {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-print {
+      display: none;
+    }
+
+    .report-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 12px;
+    }
+
+    .report-logo {
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .report-title-wrap h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #000;
+    }
+
+    .report-title-wrap p {
+      margin: 3px 0;
+      color: #222;
+      font-size: 0.95rem;
+    }
+
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .summary-box {
+      border: 1px solid #000;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+    }
+
+    .summary-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .report-table th,
+    .report-table td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: left;
+      font-size: 0.92rem;
+      color: #000;
+    }
+
+    .report-table th {
+      background: #f2f2f2;
+    }
+
+    .report-footer {
+      margin-top: 28px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .sign-box {
+      width: 45%;
+      margin-top: 24px;
+    }
+
+    .sign-line {
+      border-top: 1px solid #000;
+      margin-top: 40px;
+      padding-top: 6px;
+      font-size: 0.92rem;
+      color: #000;
+    }
+
+    @media (max-width: 1100px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 980px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .report-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 700px) {
+      .page { padding: 16px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: 1fr; }
+      .title h1 { font-size: 1.45rem; }
+      .report-summary { grid-template-columns: 1fr; }
+      .report-header,
+      .report-footer { flex-direction: column; }
+      .sign-box { width: 100%; }
+      .btn { width: 100%; text-align: center; }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #kidsPrintArea,
+      #kidsPrintArea * {
+        visibility: visible;
+      }
+
+      #kidsPrintArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>Kids System</h1>
+        <p>Separate records and attendance system for children in the church.</p>
+      </div>
+
+      <div class="btn-row">
+        <a href="main.html" class="btn btn-light">Back to Main System</a>
+      </div>
+    </div>
+
+    <section class="stats">
+      <div class="card stat-card">
+        <h3>Total Kids</h3>
+        <div class="value" id="totalKids">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Total Boys</h3>
+        <div class="value" id="totalBoys">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Total Girls</h3>
+        <div class="value" id="totalGirls">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Present Today</h3>
+        <div class="value" id="kidsPresentToday">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Absentees</h3>
+        <div class="value" id="kidsAbsentToday">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Birthdays This Month</h3>
+        <div class="value" id="kidsBirthdaysMonth">0</div>
+      </div>
+    </section>
+
+    <section class="grid-3">
+      <div class="card">
+        <div class="section-title" id="kidsFormTitle">Register Kid</div>
+        <form id="kidsForm">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="kidName" required />
+          </div>
+
+          <div class="field">
+            <label>Registered Number</label>
+            <input type="text" id="kidNumber" />
+          </div>
+
+          <div class="field">
+            <label>Gender</label>
+            <select id="kidGender" required>
+              <option value="">Select gender</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Class / Group</label>
+            <input type="text" id="kidClass" placeholder="Children class or group" />
+          </div>
+
+          <div class="field">
+            <label>Date of Birth</label>
+            <input type="date" id="kidDob" />
+          </div>
+
+          <div class="field">
+            <label>Parent / Guardian Name</label>
+            <input type="text" id="kidGuardian" />
+          </div>
+
+          <div class="field">
+            <label>Parent / Guardian Phone</label>
+            <input type="text" id="kidPhone" />
+          </div>
+
+          <div class="field">
+            <label>Address</label>
+            <input type="text" id="kidAddress" />
+          </div>
+
+          <div class="field">
+            <label>Medical / Special Note</label>
+            <textarea id="kidNote" placeholder="Optional note"></textarea>
+          </div>
+
+          <div class="field">
+            <label>Select File</label>
+            <input type="file" id="kidFile" />
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary" id="saveKidBtn">Save Kid Record</button>
+            <button type="button" class="btn btn-light" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="section-title">Search Kids Records</div>
+          <input type="text" id="kidsSearchInput" class="search-input" placeholder="Search by name or number..." />
+        </div>
+        <div id="kidsSearchResults" class="empty-state">Search results will appear here.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Birthday Reminder</div>
+        <div id="todayBirthdayNotice"></div>
+
+        <div class="section-title" style="margin-top:16px;">Upcoming Birthdays</div>
+        <div id="upcomingBirthdaysList" class="mini-list">
+          <p class="empty-state">No upcoming birthdays.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom:24px;">
+      <div class="toolbar">
+        <div class="section-title">Kids Attendance Control</div>
+        <span id="kidsAttendancePill" class="pill closed">Closed</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-success" id="openKidsAttendance">Open Attendance</button>
+        <button class="btn btn-danger" id="closeKidsAttendance">Close Attendance</button>
+        <button class="btn btn-light" id="markAllKids">Mark All Present</button>
+        <button class="btn btn-primary" id="printKidsReport">Print Kids Report</button>
+      </div>
+
+      <div class="muted" style="margin-top:12px;">
+        <strong>Opened:</strong> <span id="openedTimeText">N/A</span> |
+        <strong>Closed:</strong> <span id="closedTimeText">N/A</span>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom:24px;">
+      <div class="section-title">Kids Attendance</div>
+      <div id="kidsAttendanceTable" class="empty-state">No kids available.</div>
+    </section>
+
+    <section class="card">
+      <div class="section-title">Stored Kids Records</div>
+      <div id="kidsRecordsList" class="empty-state">No kids records saved yet.</div>
+    </section>
+
+    <div id="kidsPrintArea" class="report-print"></div>
+  </main>
+
+  <script>
+    const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
+const CHURCH_LOGO = "sda logo.png";
+    // Example:
+    // const CHURCH_LOGO = "logo.png";
+
+    let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
+    let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
+    let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
+    let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
+    let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
+    let editingKidId = null;
+
+    const kidsForm = document.getElementById('kidsForm');
+    const kidsSearchInput = document.getElementById('kidsSearchInput');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+    function saveKidsRecords() {
+      localStorage.setItem('church_kids_records', JSON.stringify(kidsRecords));
+    }
+
+    function saveKidsAttendance() {
+      localStorage.setItem('kids_attendance', JSON.stringify(kidsAttendance));
+    }
+
+    function formatDisplayDate(dateValue) {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function formatDateTime(dateValue) {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) + ' ' + date.toLocaleTimeString();
+    }
+
+    function formatBirthdayShort(dateValue) {
+      if (!dateValue) return '';
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function ensureKidsAttendance() {
+      kidsRecords.forEach(kid => {
+        const exists = kidsAttendance.find(a => a.kidId === kid.id);
+        if (!exists) {
+          kidsAttendance.push({ kidId: kid.id, present: false });
+        }
+      });
+
+      kidsAttendance = kidsAttendance.filter(a =>
+        kidsRecords.some(k => k.id === a.kidId)
+      );
+
+      saveKidsAttendance();
+    }
+
+    function updateStats() {
+      const totalKids = kidsRecords.length;
+      const totalBoys = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'male').length;
+      const totalGirls = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'female').length;
+
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const birthdaysThisMonth = kidsRecords.filter(kid => {
+        if (!kid.dob) return false;
+        const dob = new Date(kid.dob);
+        return !isNaN(dob.getTime()) && (dob.getMonth() + 1 === currentMonth);
+      }).length;
+
+      const presentCount = kidsAttendance.filter(a => a.present).length;
+
+      document.getElementById('totalKids').textContent = totalKids;
+      document.getElementById('totalBoys').textContent = totalBoys;
+      document.getElementById('totalGirls').textContent = totalGirls;
+      document.getElementById('kidsBirthdaysMonth').textContent = birthdaysThisMonth;
+
+      if (!kidsAttendanceOpen && !kidsClosedAt) {
+        document.getElementById('kidsPresentToday').textContent = 0;
+        document.getElementById('kidsAbsentToday').textContent = 0;
+      } else if (kidsAttendanceOpen && presentCount === 0) {
+        document.getElementById('kidsPresentToday').textContent = 0;
+        document.getElementById('kidsAbsentToday').textContent = 0;
+      } else if (kidsAttendanceOpen) {
+        document.getElementById('kidsPresentToday').textContent = presentCount;
+        document.getElementById('kidsAbsentToday').textContent = 0;
+      } else {
+        document.getElementById('kidsPresentToday').textContent = presentCount;
+        document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
+      }
+    }
+
+    function getTodayBirthdays() {
+      const now = new Date();
+      const month = now.getMonth();
+      const day = now.getDate();
+
+      return kidsRecords.filter(kid => {
+        if (!kid.dob) return false;
+        const dob = new Date(kid.dob);
+        return !isNaN(dob.getTime()) && dob.getMonth() === month && dob.getDate() === day;
+      });
+    }
+
+    function getUpcomingBirthdays(daysAhead = 30) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const currentYear = today.getFullYear();
+
+      return kidsRecords
+        .filter(kid => kid.dob)
+        .map(kid => {
+          const dob = new Date(kid.dob);
+          if (isNaN(dob.getTime())) return null;
+
+          let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+          if (nextBirthday < today) {
+            nextBirthday = new Date(currentYear + 1, dob.getMonth(), dob.getDate());
+          }
+
+          const diffTime = nextBirthday - today;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          return { ...kid, diffDays };
+        })
+        .filter(Boolean)
+        .filter(kid => kid.diffDays >= 0 && kid.diffDays <= daysAhead)
+        .sort((a, b) => a.diffDays - b.diffDays);
+    }
+
+    function renderBirthdayReminder() {
+      const wrap = document.getElementById('todayBirthdayNotice');
+      const todayBirthdays = getTodayBirthdays();
+
+      if (!todayBirthdays.length) {
+        wrap.innerHTML = '<p class="empty-state">No birthday today.</p>';
+        return;
+      }
+
+      wrap.innerHTML = todayBirthdays.map(kid => {
+        const message = `Happy birthday ${kid.name}. We celebrate you and pray for God’s blessings upon your life.`;
+        const phone = (kid.phone || '').replace(/[^0-9]/g, '');
+        const whatsapp = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : '';
+
+        return `
+          <div class="notice">
+            🎉 Today is <strong>${kid.name}</strong>'s birthday.
+            <div class="btn-row" style="margin-top:10px;">
+              ${whatsapp ? `<a href="${whatsapp}" target="_blank" class="btn btn-success">Send Birthday Message</a>` : '<span class="muted">No guardian phone available.</span>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderUpcomingBirthdays() {
+      const wrap = document.getElementById('upcomingBirthdaysList');
+      const upcoming = getUpcomingBirthdays(30);
+
+      if (!upcoming.length) {
+        wrap.innerHTML = '<p class="empty-state">No upcoming birthdays.</p>';
+        return;
+      }
+
+      wrap.innerHTML = upcoming.map(kid => `
+        <div>
+          <strong>${kid.name}</strong>
+          <p class="muted">${formatBirthdayShort(kid.dob)} • In ${kid.diffDays} day${kid.diffDays === 1 ? '' : 's'}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderKidsRecords() {
+      const wrap = document.getElementById('kidsRecordsList');
+
+      if (!kidsRecords.length) {
+        wrap.innerHTML = '<p class="empty-state">No kids records saved yet.</p>';
+        return;
+      }
+
+      wrap.innerHTML = kidsRecords.map(record => {
+        const guardianPhone = (record.phone || '').replace(/[^0-9]/g, '');
+        const followupMessage = `Hello, this is from church. We are checking on ${record.name}. God bless you.`;
+        const whatsapp = guardianPhone ? `https://wa.me/${guardianPhone}?text=${encodeURIComponent(followupMessage)}` : '';
+
+        return `
+          <div class="record-card">
+            <h4>${record.name}</h4>
+            <p class="muted">Number: ${record.number || 'N/A'}</p>
+            <p class="muted">Gender: ${record.gender || 'N/A'}</p>
+            <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
+            <p class="muted">DOB: ${record.dob || 'N/A'}</p>
+            <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
+            <p class="muted">Phone: ${record.phone || 'N/A'}</p>
+            <p class="muted">Address: ${record.address || 'N/A'}</p>
+            <p class="muted">Note: ${record.note || 'N/A'}</p>
+            <div class="btn-row" style="margin-top:10px;">
+              ${record.fileURL ? `<a class="btn btn-light" href="${record.fileURL}" download="${record.fileName}">Download File</a>` : ''}
+              ${whatsapp ? `<a class="btn btn-success" href="${whatsapp}" target="_blank">WhatsApp Parent</a>` : ''}
+              <button class="btn btn-warning" onclick="editKidRecord(${record.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteKidRecord(${record.id})">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSearchResults() {
+      const query = kidsSearchInput.value.trim().toLowerCase();
+      const wrap = document.getElementById('kidsSearchResults');
+
+      if (!query) {
+        wrap.innerHTML = '<p class="empty-state">Search results will appear here.</p>';
+        return;
+      }
+
+      const filtered = kidsRecords.filter(record =>
+        (record.name || '').toLowerCase().includes(query) ||
+        (record.number || '').toLowerCase().includes(query)
+      );
+
+      if (!filtered.length) {
+        wrap.innerHTML = '<p class="empty-state">No matching kid record found.</p>';
+        return;
+      }
+
+      wrap.innerHTML = filtered.map(record => `
+        <div class="record-card">
+          <h4>${record.name}</h4>
+          <p class="muted">Number: ${record.number || 'N/A'}</p>
+          <p class="muted">Gender: ${record.gender || 'N/A'}</p>
+          <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
+          <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderAttendanceMeta() {
+      const pill = document.getElementById('kidsAttendancePill');
+      const openedText = document.getElementById('openedTimeText');
+      const closedText = document.getElementById('closedTimeText');
+
+      pill.textContent = kidsAttendanceOpen ? 'Open' : 'Closed';
+      pill.className = `pill ${kidsAttendanceOpen ? 'open' : 'closed'}`;
+      openedText.textContent = kidsOpenedAt ? formatDateTime(kidsOpenedAt) : 'N/A';
+      closedText.textContent = kidsClosedAt ? formatDateTime(kidsClosedAt) : 'N/A';
+    }
+
+    function renderKidsAttendance() {
+      ensureKidsAttendance();
+      const wrap = document.getElementById('kidsAttendanceTable');
+
+      if (!kidsRecords.length) {
+        wrap.innerHTML = '<p class="empty-state">No kids available.</p>';
+        return;
+      }
+
+      wrap.innerHTML = kidsRecords.map(kid => {
+        const record = kidsAttendance.find(a => a.kidId === kid.id);
+        const guardianPhone = (kid.phone || '').replace(/[^0-9]/g, '');
+        const absentMessage = `Hello, ${kid.name} was absent from today's kids attendance. Please let us know how the child is doing. God bless you.`;
+        const absentWhatsapp = guardianPhone ? `https://wa.me/${guardianPhone}?text=${encodeURIComponent(absentMessage)}` : '';
+
+        return `
+          <div class="record-card">
+            <h4>${kid.name}</h4>
+            <p class="muted">Class: ${kid.kidClass || 'N/A'}</p>
+            <p class="muted">Guardian: ${kid.guardian || 'N/A'}</p>
+            <p style="margin:8px 0;">
+              <span class="pill ${record && record.present ? 'present' : 'absent'}">
+                ${record && record.present ? 'Present' : 'Absent'}
+              </span>
+            </p>
+
+            <div class="btn-row" style="margin-top:10px;">
+              <button class="btn ${record && record.present ? 'btn-light' : 'btn-success'}"
+                onclick="toggleKidAttendance(${kid.id})"
+                ${kidsAttendanceOpen ? '' : 'disabled'}>
+                ${record && record.present ? 'Undo' : 'Mark Present'}
+              </button>
+              ${(!record || !record.present) && absentWhatsapp && !kidsAttendanceOpen ? `<a class="btn btn-warning" href="${absentWhatsapp}" target="_blank">Message Parent</a>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function resetFormState() {
+      editingKidId = null;
+      document.getElementById('kidsFormTitle').textContent = 'Register Kid';
+      document.getElementById('saveKidBtn').textContent = 'Save Kid Record';
+      cancelEditBtn.style.display = 'none';
+      kidsForm.reset();
+    }
+
+    function renderAll() {
+      ensureKidsAttendance();
+      updateStats();
+      renderBirthdayReminder();
+      renderUpcomingBirthdays();
+      renderKidsRecords();
+      renderSearchResults();
+      renderAttendanceMeta();
+      renderKidsAttendance();
+    }
+
+    kidsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('kidName').value.trim();
+      const number = document.getElementById('kidNumber').value.trim();
+      const gender = document.getElementById('kidGender').value;
+      const kidClass = document.getElementById('kidClass').value.trim();
+      const dob = document.getElementById('kidDob').value || null;
+      const guardian = document.getElementById('kidGuardian').value.trim();
+      const phone = document.getElementById('kidPhone').value.trim();
+      const address = document.getElementById('kidAddress').value.trim();
+      const note = document.getElementById('kidNote').value.trim();
+      const fileInput = document.getElementById('kidFile');
+      const file = fileInput.files[0];
+
+      let fileURL = '';
+      let fileName = '';
+
+      if (file) {
+        fileURL = URL.createObjectURL(file);
+        fileName = file.name;
+      }
+
+      if (editingKidId) {
+        const existing = kidsRecords.find(k => k.id === editingKidId);
+        if (!existing) return;
+
+        existing.name = name;
+        existing.number = number;
+        existing.gender = gender;
+        existing.kidClass = kidClass;
+        existing.dob = dob;
+        existing.guardian = guardian;
+        existing.phone = phone;
+        existing.address = address;
+        existing.note = note;
+
+        if (file) {
+          existing.fileURL = fileURL;
+          existing.fileName = fileName;
+        }
+      } else {
+        kidsRecords.push({
+          id: Date.now(),
+          name,
+          number,
+          gender,
+          kidClass,
+          dob,
+          guardian,
+          phone,
+          address,
+          note,
+          fileURL,
+          fileName
+        });
+      }
+
+      saveKidsRecords();
+      resetFormState();
+      renderAll();
+    });
+
+    cancelEditBtn.addEventListener('click', resetFormState);
+    kidsSearchInput.addEventListener('input', renderSearchResults);
+
+    window.deleteKidRecord = function(id) {
+      if (!confirm('Delete this kid record?')) return;
+      kidsRecords = kidsRecords.filter(record => record.id !== id);
+      kidsAttendance = kidsAttendance.filter(record => record.kidId !== id);
+      saveKidsRecords();
+      saveKidsAttendance();
+      renderAll();
+    }
+
+    window.editKidRecord = function(id) {
+      const record = kidsRecords.find(k => k.id === id);
+      if (!record) return;
+
+      document.getElementById('kidName').value = record.name || '';
+      document.getElementById('kidNumber').value = record.number || '';
+      document.getElementById('kidGender').value = record.gender || '';
+      document.getElementById('kidClass').value = record.kidClass || '';
+      document.getElementById('kidDob').value = record.dob || '';
+      document.getElementById('kidGuardian').value = record.guardian || '';
+      document.getElementById('kidPhone').value = record.phone || '';
+      document.getElementById('kidAddress').value = record.address || '';
+      document.getElementById('kidNote').value = record.note || '';
+
+      editingKidId = id;
+      document.getElementById('kidsFormTitle').textContent = 'Edit Kid Record';
+      document.getElementById('saveKidBtn').textContent = 'Update Kid Record';
+      cancelEditBtn.style.display = 'inline-block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.toggleKidAttendance = function(id) {
+      if (!kidsAttendanceOpen) {
+        alert('Attendance is closed.');
+        return;
+      }
+
+      const record = kidsAttendance.find(a => a.kidId === id);
+      if (record) record.present = !record.present;
+
+      saveKidsAttendance();
+      renderAll();
+    }
+
+    document.getElementById('openKidsAttendance').onclick = () => {
+      kidsAttendanceOpen = true;
+      kidsOpenedAt = new Date().toISOString();
+      kidsClosedAt = '';
+
+      localStorage.setItem('kids_attendance_open', true);
+      localStorage.setItem('kids_opened_at', kidsOpenedAt);
+      localStorage.removeItem('kids_closed_at');
+
+      ensureKidsAttendance();
+      kidsAttendance.forEach(a => a.present = false);
+      saveKidsAttendance();
+      renderAll();
+    };
+
+    document.getElementById('closeKidsAttendance').onclick = () => {
+      kidsAttendanceOpen = false;
+      kidsClosedAt = new Date().toISOString();
+
+      localStorage.setItem('kids_attendance_open', false);
+      localStorage.setItem('kids_closed_at', kidsClosedAt);
+
+      renderAll();
+    };
+
+    document.getElementById('markAllKids').onclick = () => {
+      if (!kidsAttendanceOpen) {
+        alert('Open attendance first.');
+        return;
+      }
+
+      ensureKidsAttendance();
+      kidsAttendance.forEach(a => a.present = true);
+      saveKidsAttendance();
+      renderAll();
+    };
+
+    function buildKidsReport() {
+      const present = kidsAttendance.filter(a => a.present).length;
+      const total = kidsRecords.length;
+      const absent = Math.max(total - present, 0);
+      const male = kidsRecords.filter(k => (k.gender || '').toLowerCase() === 'male').length;
+      const female = kidsRecords.filter(k => (k.gender || '').toLowerCase() === 'female').length;
+      const printArea = document.getElementById('kidsPrintArea');
+
+      const rows = kidsRecords.length
+        ? kidsRecords.map((kid, index) => {
+            const attendanceRecord = kidsAttendance.find(a => a.kidId === kid.id);
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${kid.name}</td>
+                <td>${kid.number || 'N/A'}</td>
+                <td>${kid.gender || 'N/A'}</td>
+                <td>${kid.kidClass || 'N/A'}</td>
+                <td>${kid.guardian || 'N/A'}</td>
+                <td>${kid.phone || 'N/A'}</td>
+                <td>${attendanceRecord && attendanceRecord.present ? 'Present' : 'Absent'}</td>
+              </tr>
+            `;
+          }).join('')
+        : `<tr><td colspan="8" style="text-align:center;">No kids records available.</td></tr>`;
+
+      const logoMarkup = CHURCH_LOGO
+        ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="report-logo">`
+        : `<div class="report-logo" style="display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;">LOGO</div>`;
+
+      printArea.innerHTML = `
+        <div class="report-header">
+          ${logoMarkup}
+          <div class="report-title-wrap">
+            <h2>${CHURCH_NAME}</h2>
+            <p><strong>Official Kids Attendance Report</strong></p>
+            <p>Date: ${formatDisplayDate(new Date().toISOString())}</p>
+          </div>
+        </div>
+
+        <div class="report-summary">
+          <div class="summary-box">
+            <strong>Total Kids</strong>
+            <span>${total}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Boys</strong>
+            <span>${male}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Girls</strong>
+            <span>${female}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Present</strong>
+            <span>${present}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Absentees</strong>
+            <span>${absent}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Attendance Status</strong>
+            <span>${kidsAttendanceOpen ? 'Open' : 'Closed'}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Time Opened</strong>
+            <span>${kidsOpenedAt ? formatDateTime(kidsOpenedAt) : 'N/A'}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Time Closed</strong>
+            <span>${kidsClosedAt ? formatDateTime(kidsClosedAt) : 'N/A'}</span>
+          </div>
+        </div>
+
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Full Name</th>
+              <th>Number</th>
+              <th>Gender</th>
+              <th>Class</th>
+              <th>Guardian</th>
+              <th>Phone</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+
+        <div class="report-footer">
+          <div class="sign-box">
+            <div class="sign-line">Prepared By</div>
+          </div>
+          <div class="sign-box">
+            <div class="sign-line">Authorized Signature</div>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('printKidsReport').onclick = () => {
+      buildKidsReport();
+      window.print();
+    };
+
+    renderAll();
+  </script>
+</body>
+</html>
