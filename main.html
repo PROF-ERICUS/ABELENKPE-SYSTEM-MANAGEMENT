@@ -814,8 +814,11 @@
 
     let currentView = 'member';
     let isAdminLoggedIn = false;
-    let attendanceOpen = JSON.parse(localStorage.getItem('attendance_open') || 'false');
-    let registrationOpen = JSON.parse(localStorage.getItem('registration_open') || 'false');
+   let attendanceOpen = JSON.parse(localStorage.getItem('attendance_open') || 'false');
+let registrationOpen = JSON.parse(localStorage.getItem('registration_open') || 'false');
+let attendanceOpenedAt = localStorage.getItem('attendance_opened_at') || '';
+let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
+
 
     let members = JSON.parse(localStorage.getItem('church_members') || '[]');
     let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
@@ -1271,21 +1274,30 @@
       saveAttendance();
       renderAll();
     }
+document.getElementById('openAttendanceBtn').addEventListener('click', () => {
+  attendanceOpen = true;
+  attendanceOpenedAt = new Date().toISOString();
+  attendanceClosedAt = '';
 
-    document.getElementById('openAttendanceBtn').addEventListener('click', () => {
-      attendanceOpen = true;
-      localStorage.setItem('attendance_open', true);
-      attendance.forEach(a => a.present = false);
-      saveAttendance();
-      renderAll();
-    });
+  localStorage.setItem('attendance_open', true);
+  localStorage.setItem('attendance_opened_at', attendanceOpenedAt);
+  localStorage.removeItem('attendance_closed_at');
 
-    document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
-      attendanceOpen = false;
-      localStorage.setItem('attendance_open', false);
-      renderAll();
-      renderAbsentees();
-    });
+  attendance.forEach(a => a.present = false);
+  saveAttendance();
+  renderAll();
+});
+
+   document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
+  attendanceOpen = false;
+  attendanceClosedAt = new Date().toISOString();
+
+  localStorage.setItem('attendance_open', false);
+  localStorage.setItem('attendance_closed_at', attendanceClosedAt);
+
+  renderAll();
+  renderAbsentees();
+});
 
     document.getElementById('markAllPresentBtn').addEventListener('click', () => {
       if (!attendanceOpen) {
@@ -1438,7 +1450,7 @@
       if (memberBirthdaysList) memberBirthdaysList.innerHTML = birthdayMarkup;
     }
 
- function updateStats() {
+   function updateStats() {
   const totalMembers = members.length;
   const presentCount = attendance.filter(a => a.present).length;
 
@@ -1453,7 +1465,6 @@
   document.getElementById('presentToday').textContent = presentCount;
   document.getElementById('absentToday').textContent = Math.max(totalMembers - presentCount, 0);
 }
-    
 
     function formatDisplayDate(dateValue) {
       const date = new Date(dateValue);
@@ -1473,9 +1484,11 @@
         return !record || !record.present;
       });
 
-      const totalMembers = members.length;
-      const totalPresent = attendance.filter(a => a.present).length;
-      const totalAbsent = absentees.length;
+     const totalMembers = members.length;
+const totalPresent = attendance.filter(a => a.present).length;
+const totalAbsent = absentees.length;
+const openedTime = attendanceOpenedAt ? formatDisplayDate(attendanceOpenedAt) + ' ' + new Date(attendanceOpenedAt).toLocaleTimeString() : 'N/A';
+const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + ' ' + new Date(attendanceClosedAt).toLocaleTimeString() : 'N/A';
 
       const reportDate = new Date().toLocaleDateString(undefined, {
         year: 'numeric',
@@ -1516,23 +1529,31 @@
         </div>
 
         <div class="report-summary">
-          <div class="summary-box">
-            <strong>Total Members</strong>
-            <span>${totalMembers}</span>
-          </div>
-          <div class="summary-box">
-            <strong>Total Attendance</strong>
-            <span>${totalPresent}</span>
-          </div>
-          <div class="summary-box">
-            <strong>Total Absentees</strong>
-            <span>${totalAbsent}</span>
-          </div>
-          <div class="summary-box">
-            <strong>Attendance Status</strong>
-            <span>${attendanceOpen ? 'Open' : 'Closed'}</span>
-          </div>
-        </div>
+  <div class="summary-box">
+    <strong>Total Members</strong>
+    <span>${totalMembers}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Total Members Present</strong>
+    <span>${totalPresent}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Total Absentees</strong>
+    <span>${totalAbsent}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Attendance Status</strong>
+    <span>${attendanceOpen ? 'Open' : 'Closed'}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Time Opened</strong>
+    <span>${openedTime}</span>
+  </div>
+  <div class="summary-box">
+    <strong>Time Closed</strong>
+    <span>${closedTime}</span>
+  </div>
+</div>
 
         <table class="report-table">
           <thead>
