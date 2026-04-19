@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance Trend Page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --primary: #1d4ed8;
+      --success: #15803d;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .title h1 {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    .title p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-block;
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stat-card h3 {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .toolbar select, .toolbar input {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: #fff;
+    }
+
+    .record-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .record-card h4 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .muted { color: var(--muted); }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .pill.good { background: #dcfce7; color: #166534; }
+    .pill.warn { background: #fef3c7; color: #92400e; }
+    .pill.bad { background: #fee2e2; color: #991b1b; }
+
+    .report-print {
+      display: none;
+    }
+
+    .report-header {
+      border-bottom: 2px solid #000;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .report-header h2 {
+      color: #000;
+      margin-bottom: 6px;
+    }
+
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .summary-box {
+      border: 1px solid #000;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .report-table th, .report-table td {
+      border: 1px solid #000;
+      padding: 10px;
+      text-align: left;
+      color: #000;
+      font-size: 0.92rem;
+    }
+
+    .report-table th {
+      background: #f2f2f2;
+    }
+
+    @media (max-width: 980px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+      .report-summary { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .page { padding: 16px; }
+      .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #trendPrintArea,
+      #trendPrintArea * {
+        visibility: visible;
+      }
+
+      #trendPrintArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #fff;
+        color: #000;
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>Attendance Trend Page</h1>
+        <p>Track 1 month, 2 month and 3 month attendance status for members and kids.</p>
+      </div>
+      <div>
+        <a href="main.html" class="btn">Back to Main Page</a>
+      </div>
+    </div>
+
+    <section class="grid-4">
+      <div class="card stat-card">
+        <h3>Total Trend Records</h3>
+        <div class="value" id="totalTrendRecords">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>At Risk (2 Months Absent)</h3>
+        <div class="value" id="riskTwoMonths">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Inactive (3 Weeks)</h3>
+        <div class="value" id="inactiveThreeWeeks">0</div>
+      </div>
+      <div class="card stat-card">
+        <h3>Selected Range Sessions</h3>
+        <div class="value" id="rangeSessions">0</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <select id="trendRange">
+          <option value="30">1 Month</option>
+          <option value="60">2 Months</option>
+          <option value="90">3 Months</option>
+        </select>
+
+        <select id="trendType">
+          <option value="all">All</option>
+          <option value="member">Members Only</option>
+          <option value="kid">Kids Only</option>
+        </select>
+
+        <input type="text" id="trendSearch" placeholder="Search name or number..." />
+        <button class="btn" id="printTrendBtn" type="button">Print Follow-Up List</button>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card">
+        <div class="section-title">Attendance Trend List</div>
+        <div id="trendList">No trend data yet.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Follow-Up Alerts</div>
+        <div id="followupList">No follow-up alert yet.</div>
+      </div>
+    </section>
+
+    <div id="trendPrintArea" class="report-print"></div>
+  </main>
+
+  <script>
+    const memberHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
+    const kidsHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+
+    const trendRange = document.getElementById('trendRange');
+    const trendType = document.getElementById('trendType');
+    const trendSearch = document.getElementById('trendSearch');
+
+    function getDateDiffDays(dateStr) {
+      const today = new Date();
+      const d = new Date(dateStr);
+      const ms = today - d;
+      return Math.floor(ms / (1000 * 60 * 60 * 24));
+    }
+
+    function getFilteredSessions(days) {
+      const memberSessions = memberHistory
+        .filter(s => getDateDiffDays(s.sessionDate) <= days)
+        .map(s => ({
+          ...s,
+          type: 'member'
+        }));
+
+      const kidSessions = kidsHistory
+        .filter(s => getDateDiffDays(s.sessionDate) <= days)
+        .map(s => ({
+          ...s,
+          type: 'kid'
+        }));
+
+      return [...memberSessions, ...kidSessions].sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+    }
+
+    function buildTrendRecords(days, selectedType, query) {
+      const sessions = getFilteredSessions(days);
+      const map = {};
+
+      sessions.forEach(session => {
+        if (selectedType !== 'all' && session.type !== selectedType) return;
+
+        session.records.forEach(record => {
+          const id = `${session.type}-${record.memberId || record.kidId}`;
+          if (!map[id]) {
+            map[id] = {
+              id,
+              type: session.type === 'member' ? 'Member' : 'Kid',
+              fullName: record.fullName,
+              memberNumber: record.memberNumber || '',
+              gender: record.gender || '',
+              memberClass: record.memberClass || '',
+              guardian: record.guardian || '',
+              phone: record.phone || '',
+              presentCount: 0,
+              absentCount: 0,
+              lastSeen: null,
+              sessions: []
+            };
+          }
+
+          map[id].sessions.push({
+            date: session.sessionDate,
+            present: !!record.present
+          });
+
+          if (record.present) {
+            map[id].presentCount += 1;
+            if (!map[id].lastSeen || new Date(session.sessionDate) > new Date(map[id].lastSeen)) {
+              map[id].lastSeen = session.sessionDate;
+            }
+          } else {
+            map[id].absentCount += 1;
+          }
+        });
+      });
+
+      let records = Object.values(map).map(item => {
+        const totalSessions = item.sessions.length;
+        const attendanceRate = totalSessions ? Math.round((item.presentCount / totalSessions) * 100) : 0;
+
+        const sortedSessions = [...item.sessions].sort(
+  (a, b) => new Date(b.date) - new Date(a.date)
+);
+
+let consecutiveAbsences = 0;
+for (const session of sortedSessions) {
+  if (session.present) break;
+  consecutiveAbsences += 1;
+}
+
+let status = 'Good';
+
+if (item.absentCount >= 8) {
+  status = '2 Months Absent Risk';
+} else if (consecutiveAbsences >= 3) {
+  status = '3 Weeks Inactive';
+} else if (attendanceRate < 50) {
+  status = 'Low Attendance';
+}
+
+       return {
+  ...item,
+  totalSessions,
+  attendanceRate,
+  consecutiveAbsences,
+  status
+};
+      });
+
+      if (query) {
+        const q = query.toLowerCase();
+        records = records.filter(item =>
+          (item.fullName || '').toLowerCase().includes(q) ||
+          (item.memberNumber || '').toLowerCase().includes(q)
+        );
+      }
+
+      return {
+        sessions,
+        records
+      };
+    }
+
+    function getStatusClass(status) {
+      if (status === 'Good') return 'good';
+      if (status === 'Low Attendance') return 'warn';
+      return 'bad';
+    }
+
+    function renderTrend() {
+      const days = Number(trendRange.value);
+      const selectedType = trendType.value;
+      const query = trendSearch.value.trim();
+
+      const { sessions, records } = buildTrendRecords(days, selectedType, query);
+
+      document.getElementById('totalTrendRecords').textContent = records.length;
+      document.getElementById('riskTwoMonths').textContent = records.filter(r => r.status === '2 Months Absent Risk').length;
+      document.getElementById('inactiveThreeWeeks').textContent = records.filter(r => r.status === '3 Weeks Inactive').length;
+      document.getElementById('rangeSessions').textContent = sessions.length;
+
+      const trendList = document.getElementById('trendList');
+      const followupList = document.getElementById('followupList');
+
+      if (!records.length) {
+        trendList.innerHTML = '<p class="muted">No trend data yet. Start closing attendance sessions first.</p>';
+        followupList.innerHTML = '<p class="muted">No follow-up alert yet.</p>';
+        return;
+      }
+
+      trendList.innerHTML = records.map(item => `
+        <div class="record-card">
+          <h4>${item.fullName}</h4>
+          <p class="muted">Type: ${item.type}</p>
+          <p class="muted">Number: ${item.memberNumber || 'N/A'}</p>
+          <p class="muted">Class: ${item.memberClass || 'N/A'}</p>
+          ${item.type === 'Kid' ? `<p class="muted">Guardian: ${item.guardian || 'N/A'}</p>` : ''}
+          <p class="muted">Present: ${item.presentCount} | Absent: ${item.absentCount}</p>
+<p class="muted">Inactive Streak: ${item.consecutiveAbsences} week(s)</p>
+          <p class="muted">Attendance Rate: ${item.attendanceRate}%</p>
+          <p class="muted">Last Seen: ${item.lastSeen || 'Never'}</p>
+          <p style="margin-top:8px;"><span class="pill ${getStatusClass(item.status)}">${item.status}</span></p>
+        </div>
+      `).join('');
+
+      const alerts = records.filter(item =>
+        item.status === '2 Months Absent Risk' ||
+        item.status === '3 Weeks Inactive'
+      );
+
+      if (!alerts.length) {
+        followupList.innerHTML = '<p class="muted">No urgent follow-up alert yet.</p>';
+      } else {
+        followupList.innerHTML = alerts.map(item => `
+          <div class="record-card">
+            <h4>${item.fullName}</h4>
+            <p class="muted">Type: ${item.type}</p>
+            <p class="muted">Status: ${item.status}</p>
+            <p class="muted">Absent Count: ${item.absentCount}</p>
+            <p class="muted">Last Seen: ${item.lastSeen || 'Never'}</p>
+            ${item.phone ? `<p class="muted">Phone: ${item.phone}</p>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+
+    function buildTrendPrint() {
+      const days = Number(trendRange.value);
+      const selectedType = trendType.value;
+      const query = trendSearch.value.trim();
+      const { sessions, records } = buildTrendRecords(days, selectedType, query);
+
+      const followups = records.filter(item =>
+        item.status === '2 Months Absent Risk' ||
+        item.status === '3 Weeks Inactive'
+      );
+
+      const area = document.getElementById('trendPrintArea');
+
+      area.innerHTML = `
+        <div class="report-header">
+          <h2>Attendance Trend Follow-Up Report</h2>
+          <p>Date: ${new Date().toLocaleDateString()}</p>
+          <p>Range: ${days} Days</p>
+        </div>
+
+        <div class="report-summary">
+          <div class="summary-box">
+            <strong>Total Records</strong>
+            <span>${records.length}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Sessions</strong>
+            <span>${sessions.length}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Follow-Up Cases</strong>
+            <span>${followups.length}</span>
+          </div>
+        </div>
+
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Number</th>
+              <th>Present</th>
+<th>Absent</th>
+<th>Inactive Streak</th>
+<th>Rate</th>
+<th>Last Seen</th>
+<th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              followups.length
+                ? followups.map((item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.fullName}</td>
+                    <td>${item.type}</td>
+                    <td>${item.memberNumber || 'N/A'}</td>
+                    <td>${item.presentCount}</td>
+<td>${item.absentCount}</td>
+<td>${item.consecutiveAbsences}</td>
+<td>${item.attendanceRate}%</td>
+<td>${item.lastSeen || 'Never'}</td>
+<td>${item.status}</td>
+                  </tr>
+                `).join('')
+                : `<tr><td colspan="9" style="text-align:center;">No follow-up cases found.</td></tr>`
+            }
+          </tbody>
+        </table>
+      `;
+    }
+
+    trendRange.addEventListener('change', renderTrend);
+    trendType.addEventListener('change', renderTrend);
+    trendSearch.addEventListener('input', renderTrend);
+
+    document.getElementById('printTrendBtn').addEventListener('click', () => {
+      buildTrendPrint();
+      window.print();
+    });
+
+    renderTrend();
+  </script>
+</body>
+</html>
