@@ -163,7 +163,8 @@
     }
 
     .field input,
-    .field select {
+    .field select,
+    .field textarea {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid var(--border);
@@ -171,6 +172,12 @@
       outline: none;
       font-size: 0.95rem;
       background: #fff;
+      font-family: inherit;
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
     }
 
     .btn-row {
@@ -408,6 +415,12 @@
       color: #000;
     }
 
+    .bulk-box {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
     @media (max-width: 980px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
       .grid-2 { grid-template-columns: 1fr; }
@@ -498,11 +511,9 @@
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <button class="btn btn-light" id="switchAdminView">Admin Login</button>
           <button class="btn btn-light" id="switchMemberView">Member View</button>
-           <button class="btn btn-light" id="switchKidsView">Kids View</button>
-           <button class="btn btn-light" id="switchTrendView">Trend View</button>
+          <button class="btn btn-light" id="switchKidsView">Kids View</button>
+          <button class="btn btn-light" id="switchTrendView">Trend View</button>
           <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
-          
-      
           <div class="session-badge" id="sessionStatus">Attendance Closed</div>
           <div class="session-badge" id="registrationStatus">Registration Closed</div>
         </div>
@@ -544,7 +555,7 @@
                 <button type="submit" class="btn btn-primary">Login as Admin</button>
               </div>
             </form>
-            <p class="muted" style="margin-top:12px;"> </p>
+            <p class="muted" style="margin-top:12px;"></p>
           </div>
           <div class="card">
             <div class="section-title">Access Note</div>
@@ -558,7 +569,6 @@
           <div class="card">
             <div class="section-title">Quick Actions</div>
             <div class="btn-row">
-              
               <button class="btn btn-success" id="openAttendanceBtn">Open Attendance</button>
               <button class="btn btn-danger" id="closeAttendanceBtn">Close Attendance</button>
               <button class="btn btn-light" id="markAllPresentBtn">Mark All Present</button>
@@ -605,12 +615,31 @@
               </div>
               <div class="field">
                 <label>Phone Number</label>
-                <input type="text" id="phone" placeholder="For absentee check-up message" />
+                <input type="text" id="phone" placeholder="Registered number must be same as phone number" required />
+              </div>
+              <div class="field">
+                <label>Note</label>
+                <textarea id="note" placeholder="Optional note"></textarea>
               </div>
               <div class="btn-row">
                 <button type="submit" class="btn btn-primary">Save Member</button>
               </div>
             </form>
+
+            <div class="bulk-box">
+              <div class="section-title">Bulk Upload Members (Excel / CSV)</div>
+              <div class="field">
+                <label>Select CSV File</label>
+                <input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" />
+              </div>
+              <div class="btn-row">
+               <button class="btn btn-primary" id="uploadBulkBtn" type="button">Upload File</button>
+                <button class="btn btn-light" id="downloadTemplateBtn" type="button">Download Template</button>
+              </div>
+              <p class="muted" style="margin-top:10px;">
+  Upload Excel or CSV using this format: fullName, memberNumber, gender, memberClass, dob, phone, note
+</p>
+            </div>
           </div>
 
           <div class="card">
@@ -668,11 +697,15 @@
               </div>
               <div class="field">
                 <label>Date of Birth</label>
-                <input type="date" id="selfDob"  />
+                <input type="date" id="selfDob" />
               </div>
               <div class="field">
                 <label>Phone Number</label>
-                <input type="text" id="selfPhone" placeholder="Optional phone number" />
+                <input type="text" id="selfPhone" placeholder="Registered number must be same as phone number" required />
+              </div>
+              <div class="field">
+                <label>Note</label>
+                <textarea id="selfNote" placeholder="Optional note"></textarea>
               </div>
               <div class="btn-row">
                 <button type="submit" class="btn btn-primary">Submit Registration</button>
@@ -695,16 +728,16 @@
           <div class="table-wrap" id="searchTableWrap">
             <table>
               <thead>
-  <tr>
-    <th>Name</th>
-    <th>Number</th>
-    <th>Gender</th>
-    <th>Class</th>
-    <th>DOB</th>
-    <th>Type</th>
-    <th>Note</th>
-  </tr>
-</thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Number</th>
+                  <th>Gender</th>
+                  <th>Class</th>
+                  <th>DOB</th>
+                  <th>Type</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
               <tbody id="searchResults"></tbody>
             </table>
           </div>
@@ -821,53 +854,51 @@
 
     let currentView = 'member';
     let isAdminLoggedIn = false;
-   let attendanceOpen = JSON.parse(localStorage.getItem('attendance_open') || 'false');
-let registrationOpen = JSON.parse(localStorage.getItem('registration_open') || 'false');
-let attendanceOpenedAt = localStorage.getItem('attendance_opened_at') || '';
-let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
+    let attendanceOpen = JSON.parse(localStorage.getItem('attendance_open') || 'false');
+    let registrationOpen = JSON.parse(localStorage.getItem('registration_open') || 'false');
+    let attendanceOpenedAt = localStorage.getItem('attendance_opened_at') || '';
+    let attendanceClosedAt = localStorage.getItem('attendance_closed_at') || '';
 
+    let members = JSON.parse(localStorage.getItem('church_members') || '[]');
+    let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
+    let records = JSON.parse(localStorage.getItem('church_records') || '[]');
+    let memberAttendanceHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
+    let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
 
-   let members = JSON.parse(localStorage.getItem('church_members') || '[]');
-let attendance = JSON.parse(localStorage.getItem('church_attendance') || '[]');
-let records = JSON.parse(localStorage.getItem('church_records') || '[]');
-let memberAttendanceHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
-let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
+    function saveMemberAttendanceHistory() {
+      localStorage.setItem('church_member_attendance_history', JSON.stringify(memberAttendanceHistory));
+    }
 
-function saveMemberAttendanceHistory() {
-  localStorage.setItem('church_member_attendance_history', JSON.stringify(memberAttendanceHistory));
-}
+    function archiveMemberAttendanceSession() {
+      const today = new Date();
+      const sessionDate = today.toISOString().split('T')[0];
 
-function archiveMemberAttendanceSession() {
-  const today = new Date();
-  const sessionDate = today.toISOString().split('T')[0];
+      const alreadySaved = memberAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
+      if (alreadySaved) return;
 
-  const alreadySaved = memberAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
-  if (alreadySaved) return;
-
-  const snapshot = {
-    sessionDate,
-    openedAt: attendanceOpenedAt || '',
-    closedAt: attendanceClosedAt || new Date().toISOString(),
-    records: members.map(member => {
-      const record = attendance.find(a => a.memberId === member.id);
-      return {
-        memberId: member.id,
-        fullName: member.fullName,
-        memberNumber: member.memberNumber,
-        gender: member.gender || '',
-        memberClass: member.memberClass || '',
-        present: !!(record && record.present)
+      const snapshot = {
+        sessionDate,
+        openedAt: attendanceOpenedAt || '',
+        closedAt: attendanceClosedAt || new Date().toISOString(),
+        records: members.map(member => {
+          const record = attendance.find(a => a.memberId === member.id);
+          return {
+            memberId: member.id,
+            fullName: member.fullName,
+            memberNumber: member.memberNumber,
+            gender: member.gender || '',
+            memberClass: member.memberClass || '',
+            present: !!(record && record.present)
+          };
+        })
       };
-    })
-  };
 
-  memberAttendanceHistory.push(snapshot);
-  saveMemberAttendanceHistory();
-}
+      memberAttendanceHistory.push(snapshot);
+      saveMemberAttendanceHistory();
+    }
+
     const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST CHURCH";
     const CHURCH_LOGO = "sda logo.png";
-    // Example:
-    // const CHURCH_LOGO = "logo.png";
 
     function goToSection(sectionId) {
       if (["dashboard", "member-registration", "attendance", "absentees", "records"].includes(sectionId) && !isAdminLoggedIn) {
@@ -935,12 +966,14 @@ function archiveMemberAttendanceSession() {
       currentView = 'member';
       updateViewMode();
     });
+
     document.getElementById('switchKidsView').addEventListener('click', () => {
-  window.location.href = 'kids.html';
-});
-document.getElementById('switchTrendView').addEventListener('click', () => {
-  window.location.href = 'trend.html';
-});
+      window.location.href = 'kids.html';
+    });
+
+    document.getElementById('switchTrendView').addEventListener('click', () => {
+      window.location.href = 'trend.html';
+    });
 
     adminLogoutBtn.addEventListener('click', () => {
       isAdminLoggedIn = false;
@@ -979,6 +1012,22 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       localStorage.setItem('church_records', JSON.stringify(records));
     }
 
+    function normalizeMemberRow(member) {
+      return {
+        id: member.id || Date.now(),
+        fullName: member.fullName || '',
+        memberNumber: member.memberNumber || '',
+        gender: member.gender || '',
+        memberClass: member.memberClass || '',
+        dob: member.dob || null,
+        phone: member.phone || '',
+        note: member.note || ''
+      };
+    }
+
+    members = members.map(normalizeMemberRow);
+    saveMembers();
+
     const memberForm = document.getElementById('memberForm');
     const memberSelfRegisterForm = document.getElementById('memberSelfRegisterForm');
 
@@ -986,13 +1035,25 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       e.preventDefault();
 
       const fullName = document.getElementById('fullName').value.trim();
-      const memberNumber = document.getElementById('memberNumber').value.trim();
+      const memberNumberInput = document.getElementById('memberNumber').value.trim();
       const gender = document.getElementById('gender').value;
       const memberClass = document.getElementById('memberClass').value.trim();
       const dob = document.getElementById('dob').value || null;
       const phone = document.getElementById('phone').value.trim();
+      const note = document.getElementById('note').value.trim();
+      const memberNumber = phone || memberNumberInput;
 
-      const existing = members.find(m => m.memberNumber.toLowerCase() === memberNumber.toLowerCase());
+      if (!fullName || !memberNumber || !gender || !memberClass || !phone) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      if (memberNumber !== phone) {
+        alert('Registered number must be the same as phone number.');
+        return;
+      }
+
+      const existing = members.find(m => (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase());
       if (existing) {
         alert('Registered number already exists.');
         return;
@@ -1005,7 +1066,8 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
         gender,
         memberClass,
         dob,
-        phone
+        phone,
+        note
       });
 
       saveMembers();
@@ -1022,13 +1084,25 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       }
 
       const fullName = document.getElementById('selfFullName').value.trim();
-      const memberNumber = document.getElementById('selfMemberNumber').value.trim();
+      const memberNumberInput = document.getElementById('selfMemberNumber').value.trim();
       const gender = document.getElementById('selfGender').value;
       const memberClass = document.getElementById('selfMemberClass').value.trim();
-      const dob = document.getElementById('dob').value || null;
+      const dob = document.getElementById('selfDob').value || null;
       const phone = document.getElementById('selfPhone').value.trim();
+      const note = document.getElementById('selfNote').value.trim();
+      const memberNumber = phone || memberNumberInput;
 
-      const existing = members.find(m => m.memberNumber.toLowerCase() === memberNumber.toLowerCase());
+      if (!fullName || !memberNumber || !gender || !memberClass || !phone) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      if (memberNumber !== phone) {
+        alert('Registered number must be the same as phone number.');
+        return;
+      }
+
+      const existing = members.find(m => (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase());
       if (existing) {
         alert('Registered number already exists.');
         return;
@@ -1041,7 +1115,8 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
         gender,
         memberClass,
         dob,
-        phone
+        phone,
+        note
       });
 
       saveMembers();
@@ -1064,6 +1139,9 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
           <p class="muted">No: ${member.memberNumber}</p>
           <p class="muted">Gender: ${member.gender}</p>
           <p class="muted">Class: ${member.memberClass}</p>
+          <p class="muted">Phone: ${member.phone || 'N/A'}</p>
+          <p class="muted">DOB: ${member.dob || 'N/A'}</p>
+          <p class="muted">Note: ${member.note || 'N/A'}</p>
           <div class="btn-row" style="margin-top:10px;">
             <button class="btn btn-light" onclick="editMember(${member.id})">Edit</button>
             <button class="btn btn-danger" onclick="deleteMember(${member.id})">Delete</button>
@@ -1089,8 +1167,9 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       document.getElementById('memberNumber').value = member.memberNumber;
       document.getElementById('gender').value = member.gender;
       document.getElementById('memberClass').value = member.memberClass;
-      document.getElementById('dob').value = member.dob;
+      document.getElementById('dob').value = member.dob || '';
       document.getElementById('phone').value = member.phone || '';
+      document.getElementById('note').value = member.note || '';
 
       members = members.filter(m => m.id !== id);
       saveMembers();
@@ -1098,126 +1177,127 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       goToSection('member-registration');
     }
 
-   function renderSearchResults() {
-  const query = document.getElementById('searchInput').value.trim().toLowerCase();
-  const tbody = document.getElementById('searchResults');
-  const searchTableWrap = document.getElementById('searchTableWrap');
+    function renderSearchResults() {
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const tbody = document.getElementById('searchResults');
+      const searchTableWrap = document.getElementById('searchTableWrap');
 
-  if (!query) {
-    tbody.innerHTML = '';
-    searchTableWrap.classList.add('hidden');
-    return;
-  }
+      if (!query) {
+        tbody.innerHTML = '';
+        searchTableWrap.classList.add('hidden');
+        return;
+      }
 
-  searchTableWrap.classList.remove('hidden');
+      searchTableWrap.classList.remove('hidden');
 
-  const matchedMembers = members.filter(member =>
-    (member.memberNumber || '').toLowerCase().includes(query) ||
-    (member.fullName || '').toLowerCase().includes(query)
-  );
-
-  const matchedKids = kidsRecords.filter(kid =>
-    (kid.number || '').toLowerCase().includes(query) ||
-    (kid.name || '').toLowerCase().includes(query) ||
-    (kid.phone || '').toLowerCase().includes(query)
-  );
-
-  let rows = [];
-
-  matchedMembers.forEach(member => {
-    const relatedKids = kidsRecords.filter(kid => {
-      const memberNumber = (member.memberNumber || '').trim().toLowerCase();
-      const kidNumber = (kid.number || '').trim().toLowerCase();
-      const guardianPhone = (kid.phone || '').trim().toLowerCase();
-
-      return (
-        (memberNumber && kidNumber && memberNumber === kidNumber) ||
-        (memberNumber && guardianPhone && memberNumber === guardianPhone)
+      const matchedMembers = members.filter(member =>
+        (member.memberNumber || '').toLowerCase().includes(query) ||
+        (member.fullName || '').toLowerCase().includes(query) ||
+        (member.phone || '').toLowerCase().includes(query)
       );
-    });
 
-    rows.push(`
-      <tr>
-        <td>${member.fullName}</td>
-        <td>${member.memberNumber}</td>
-        <td>${member.gender || 'N/A'}</td>
-        <td>${member.memberClass || 'N/A'}</td>
-        <td>${member.dob || 'N/A'}</td>
-        <td><span class="pill open">Member</span></td>
-        <td>${
-          relatedKids.length
-            ? `Parent/Guardian of: ${relatedKids.map(k => k.name).join(', ')}`
-            : 'Church member'
-        }</td>
-      </tr>
-    `);
-
-    relatedKids.forEach(kid => {
-      rows.push(`
-        <tr>
-          <td>${kid.name}</td>
-          <td>${kid.number || kid.phone || 'N/A'}</td>
-          <td>${kid.gender || 'N/A'}</td>
-          <td>${kid.kidClass || 'N/A'}</td>
-          <td>${kid.dob || 'N/A'}</td>
-          <td><span class="pill present">Kid</span></td>
-          <td>Child linked to member ${member.fullName} as parent/guardian</td>
-        </tr>
-      `);
-    });
-  });
-
-  matchedKids.forEach(kid => {
-    const alreadyShown = rows.some(row => row.includes(`>${kid.name}</td>`));
-    if (alreadyShown) return;
-
-    const relatedMembers = members.filter(member => {
-      const memberNumber = (member.memberNumber || '').trim().toLowerCase();
-      const kidNumber = (kid.number || '').trim().toLowerCase();
-      const guardianPhone = (kid.phone || '').trim().toLowerCase();
-
-      return (
-        (memberNumber && kidNumber && memberNumber === kidNumber) ||
-        (memberNumber && guardianPhone && memberNumber === guardianPhone)
+      const matchedKids = kidsRecords.filter(kid =>
+        (kid.number || '').toLowerCase().includes(query) ||
+        (kid.name || '').toLowerCase().includes(query) ||
+        (kid.phone || '').toLowerCase().includes(query)
       );
-    });
 
-    rows.push(`
-      <tr>
-        <td>${kid.name}</td>
-        <td>${kid.number || kid.phone || 'N/A'}</td>
-        <td>${kid.gender || 'N/A'}</td>
-        <td>${kid.kidClass || 'N/A'}</td>
-        <td>${kid.dob || 'N/A'}</td>
-        <td><span class="pill present">Kid</span></td>
-        <td>${
-          relatedMembers.length
-            ? `Child of/under guardian: ${relatedMembers.map(m => m.fullName).join(', ')}`
-            : 'Kid record'
-        }</td>
-      </tr>
-    `);
+      let rows = [];
 
-    relatedMembers.forEach(member => {
-      const memberAlreadyShown = rows.some(row => row.includes(`>${member.fullName}</td>`) && row.includes('Member'));
-      if (memberAlreadyShown) return;
+      matchedMembers.forEach(member => {
+        const relatedKids = kidsRecords.filter(kid => {
+          const memberNumber = (member.memberNumber || '').trim().toLowerCase();
+          const kidNumber = (kid.number || '').trim().toLowerCase();
+          const guardianPhone = (kid.phone || '').trim().toLowerCase();
 
-      rows.push(`
-        <tr>
-          <td>${member.fullName}</td>
-          <td>${member.memberNumber}</td>
-          <td>${member.gender || 'N/A'}</td>
-          <td>${member.memberClass || 'N/A'}</td>
-          <td>${member.dob || 'N/A'}</td>
-          <td><span class="pill open">Member</span></td>
-          <td>Parent/Guardian linked to kid ${kid.name}</td>
-        </tr>
-      `);
-    });
-  });
+          return (
+            (memberNumber && kidNumber && memberNumber === kidNumber) ||
+            (memberNumber && guardianPhone && memberNumber === guardianPhone)
+          );
+        });
 
-  tbody.innerHTML = rows.join('') || '<tr><td colspan="7" class="muted">No member or kid found.</td></tr>';
-}
+        rows.push(`
+          <tr>
+            <td>${member.fullName}</td>
+            <td>${member.memberNumber}</td>
+            <td>${member.gender || 'N/A'}</td>
+            <td>${member.memberClass || 'N/A'}</td>
+            <td>${member.dob || 'N/A'}</td>
+            <td><span class="pill open">Member</span></td>
+            <td>${
+              relatedKids.length
+                ? `Parent/Guardian of: ${relatedKids.map(k => k.name).join(', ')}`
+                : (member.note || 'Church member')
+            }</td>
+          </tr>
+        `);
+
+        relatedKids.forEach(kid => {
+          rows.push(`
+            <tr>
+              <td>${kid.name}</td>
+              <td>${kid.number || kid.phone || 'N/A'}</td>
+              <td>${kid.gender || 'N/A'}</td>
+              <td>${kid.kidClass || 'N/A'}</td>
+              <td>${kid.dob || 'N/A'}</td>
+              <td><span class="pill present">Kid</span></td>
+              <td>Child linked to member ${member.fullName} as parent/guardian</td>
+            </tr>
+          `);
+        });
+      });
+
+      matchedKids.forEach(kid => {
+        const alreadyShown = rows.some(row => row.includes(`>${kid.name}</td>`));
+        if (alreadyShown) return;
+
+        const relatedMembers = members.filter(member => {
+          const memberNumber = (member.memberNumber || '').trim().toLowerCase();
+          const kidNumber = (kid.number || '').trim().toLowerCase();
+          const guardianPhone = (kid.phone || '').trim().toLowerCase();
+
+          return (
+            (memberNumber && kidNumber && memberNumber === kidNumber) ||
+            (memberNumber && guardianPhone && memberNumber === guardianPhone)
+          );
+        });
+
+        rows.push(`
+          <tr>
+            <td>${kid.name}</td>
+            <td>${kid.number || kid.phone || 'N/A'}</td>
+            <td>${kid.gender || 'N/A'}</td>
+            <td>${kid.kidClass || 'N/A'}</td>
+            <td>${kid.dob || 'N/A'}</td>
+            <td><span class="pill present">Kid</span></td>
+            <td>${
+              relatedMembers.length
+                ? `Child of/under guardian: ${relatedMembers.map(m => m.fullName).join(', ')}`
+                : 'Kid record'
+            }</td>
+          </tr>
+        `);
+
+        relatedMembers.forEach(member => {
+          const memberAlreadyShown = rows.some(row => row.includes(`>${member.fullName}</td>`) && row.includes('Member'));
+          if (memberAlreadyShown) return;
+
+          rows.push(`
+            <tr>
+              <td>${member.fullName}</td>
+              <td>${member.memberNumber}</td>
+              <td>${member.gender || 'N/A'}</td>
+              <td>${member.memberClass || 'N/A'}</td>
+              <td>${member.dob || 'N/A'}</td>
+              <td><span class="pill open">Member</span></td>
+              <td>Parent/Guardian linked to kid ${kid.name}</td>
+            </tr>
+          `);
+        });
+      });
+
+      tbody.innerHTML = rows.join('') || '<tr><td colspan="7" class="muted">No member or kid found.</td></tr>';
+    }
 
     let searchTimeout;
     let countdownInterval;
@@ -1343,7 +1423,7 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       }
 
       if (form) {
-        const fields = form.querySelectorAll('input, select, button');
+        const fields = form.querySelectorAll('input, select, textarea, button');
         fields.forEach(field => {
           field.disabled = !registrationOpen;
         });
@@ -1412,32 +1492,33 @@ document.getElementById('switchTrendView').addEventListener('click', () => {
       saveAttendance();
       renderAll();
     }
-document.getElementById('openAttendanceBtn').addEventListener('click', () => {
-  attendanceOpen = true;
-  attendanceOpenedAt = new Date().toISOString();
-  attendanceClosedAt = '';
 
-  localStorage.setItem('attendance_open', true);
-  localStorage.setItem('attendance_opened_at', attendanceOpenedAt);
-  localStorage.removeItem('attendance_closed_at');
+    document.getElementById('openAttendanceBtn').addEventListener('click', () => {
+      attendanceOpen = true;
+      attendanceOpenedAt = new Date().toISOString();
+      attendanceClosedAt = '';
 
-  attendance.forEach(a => a.present = false);
-  saveAttendance();
-  renderAll();
-});
+      localStorage.setItem('attendance_open', true);
+      localStorage.setItem('attendance_opened_at', attendanceOpenedAt);
+      localStorage.removeItem('attendance_closed_at');
 
-  document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
-  attendanceOpen = false;
-  attendanceClosedAt = new Date().toISOString();
+      attendance.forEach(a => a.present = false);
+      saveAttendance();
+      renderAll();
+    });
 
-  localStorage.setItem('attendance_open', false);
-  localStorage.setItem('attendance_closed_at', attendanceClosedAt);
+    document.getElementById('closeAttendanceBtn').addEventListener('click', () => {
+      attendanceOpen = false;
+      attendanceClosedAt = new Date().toISOString();
 
-  archiveMemberAttendanceSession();
+      localStorage.setItem('attendance_open', false);
+      localStorage.setItem('attendance_closed_at', attendanceClosedAt);
 
-  renderAll();
-  renderAbsentees();
-});
+      archiveMemberAttendanceSession();
+
+      renderAll();
+      renderAbsentees();
+    });
 
     document.getElementById('markAllPresentBtn').addEventListener('click', () => {
       if (!attendanceOpen) {
@@ -1475,7 +1556,7 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
         return;
       }
 
-      const member = members.find(m => m.memberNumber.toLowerCase() === number);
+      const member = members.find(m => (m.memberNumber || '').toLowerCase() === number);
       if (!member) {
         result.innerHTML = '<span class="muted">Member number not found.</span>';
         return;
@@ -1514,6 +1595,7 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
             <h4>${member.fullName}</h4>
             <p class="muted">Number: ${member.memberNumber}</p>
             <p class="muted">Phone: ${phone}</p>
+            <p class="muted">Note: ${member.note || 'N/A'}</p>
             <p style="margin:10px 0;">${message}</p>
             ${member.phone ? `<a class="btn btn-success" href="${whatsappLink}" target="_blank">Send Check-up Message</a>` : '<span class="muted">No phone number to send message.</span>'}
           </div>
@@ -1590,21 +1672,21 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
       if (memberBirthdaysList) memberBirthdaysList.innerHTML = birthdayMarkup;
     }
 
-   function updateStats() {
-  const totalMembers = members.length;
-  const presentCount = attendance.filter(a => a.present).length;
+    function updateStats() {
+      const totalMembers = members.length;
+      const presentCount = attendance.filter(a => a.present).length;
 
-  document.getElementById('totalMembers').textContent = totalMembers;
+      document.getElementById('totalMembers').textContent = totalMembers;
 
-  if (!attendanceOpen || presentCount === 0) {
-    document.getElementById('presentToday').textContent = 0;
-    document.getElementById('absentToday').textContent = 0;
-    return;
-  }
+      if (!attendanceOpen || presentCount === 0) {
+        document.getElementById('presentToday').textContent = 0;
+        document.getElementById('absentToday').textContent = 0;
+        return;
+      }
 
-  document.getElementById('presentToday').textContent = presentCount;
-  document.getElementById('absentToday').textContent = Math.max(totalMembers - presentCount, 0);
-}
+      document.getElementById('presentToday').textContent = presentCount;
+      document.getElementById('absentToday').textContent = Math.max(totalMembers - presentCount, 0);
+    }
 
     function formatDisplayDate(dateValue) {
       const date = new Date(dateValue);
@@ -1624,13 +1706,13 @@ document.getElementById('openAttendanceBtn').addEventListener('click', () => {
         return !record || !record.present;
       });
 
-     const totalMembers = members.length;
-const totalPresent = attendance.filter(a => a.present).length;
-const totalAbsent = absentees.length;
-const totalMale = members.filter(member => (member.gender || '').toLowerCase() === 'male').length;
-const totalFemale = members.filter(member => (member.gender || '').toLowerCase() === 'female').length;
-const openedTime = attendanceOpenedAt ? formatDisplayDate(attendanceOpenedAt) + ' ' + new Date(attendanceOpenedAt).toLocaleTimeString() : 'N/A';
-const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + ' ' + new Date(attendanceClosedAt).toLocaleTimeString() : 'N/A';
+      const totalMembers = members.length;
+      const totalPresent = attendance.filter(a => a.present).length;
+      const totalAbsent = absentees.length;
+      const totalMale = members.filter(member => (member.gender || '').toLowerCase() === 'male').length;
+      const totalFemale = members.filter(member => (member.gender || '').toLowerCase() === 'female').length;
+      const openedTime = attendanceOpenedAt ? formatDisplayDate(attendanceOpenedAt) + ' ' + new Date(attendanceOpenedAt).toLocaleTimeString() : 'N/A';
+      const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + ' ' + new Date(attendanceClosedAt).toLocaleTimeString() : 'N/A';
 
       const reportDate = new Date().toLocaleDateString(undefined, {
         year: 'numeric',
@@ -1671,39 +1753,39 @@ const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + 
         </div>
 
         <div class="report-summary">
-  <div class="summary-box">
-    <strong>Total Members</strong>
-    <span>${totalMembers}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Total Male Members</strong>
-    <span>${totalMale}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Total Female Members</strong>
-    <span>${totalFemale}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Total Members Present</strong>
-    <span>${totalPresent}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Total Absentees</strong>
-    <span>${totalAbsent}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Attendance Status</strong>
-    <span>${attendanceOpen ? 'Open' : 'Closed'}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Time Opened</strong>
-    <span>${openedTime}</span>
-  </div>
-  <div class="summary-box">
-    <strong>Time Closed</strong>
-    <span>${closedTime}</span>
-  </div>
-</div>
+          <div class="summary-box">
+            <strong>Total Members</strong>
+            <span>${totalMembers}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Male Members</strong>
+            <span>${totalMale}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Female Members</strong>
+            <span>${totalFemale}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Members Present</strong>
+            <span>${totalPresent}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Total Absentees</strong>
+            <span>${totalAbsent}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Attendance Status</strong>
+            <span>${attendanceOpen ? 'Open' : 'Closed'}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Time Opened</strong>
+            <span>${openedTime}</span>
+          </div>
+          <div class="summary-box">
+            <strong>Time Closed</strong>
+            <span>${closedTime}</span>
+          </div>
+        </div>
 
         <table class="report-table">
           <thead>
@@ -1739,143 +1821,321 @@ const closedTime = attendanceClosedAt ? formatDisplayDate(attendanceClosedAt) + 
     });
 
     function formatBirthdayDate(dateValue) {
-  if (!dateValue) return '';
-  const date = new Date(dateValue);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, {
-    month: 'long',
-    day: 'numeric'
-  });
-}
+      if (!dateValue) return '';
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric'
+      });
+    }
 
-function getTodayBirthdays() {
-  const now = new Date();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
+    function getTodayBirthdays() {
+      const now = new Date();
+      const todayMonth = now.getMonth() + 1;
+      const todayDay = now.getDate();
 
-  return members.filter(member => {
-    if (!member.dob) return false;
-    const dob = new Date(member.dob);
-    return (
-      !isNaN(dob.getTime()) &&
-      dob.getMonth() + 1 === todayMonth &&
-      dob.getDate() === todayDay
-    );
-  });
-}
+      return members.filter(member => {
+        if (!member.dob) return false;
+        const dob = new Date(member.dob);
+        return (
+          !isNaN(dob.getTime()) &&
+          dob.getMonth() + 1 === todayMonth &&
+          dob.getDate() === todayDay
+        );
+      });
+    }
 
-function getUpcomingBirthdays(daysAhead = 7) {
-  const now = new Date();
-  const currentYear = now.getFullYear();
+    function getUpcomingBirthdays(daysAhead = 7) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
 
-  return members
-    .filter(member => member.dob)
-    .map(member => {
-      const dob = new Date(member.dob);
-      if (isNaN(dob.getTime())) return null;
+      return members
+        .filter(member => member.dob)
+        .map(member => {
+          const dob = new Date(member.dob);
+          if (isNaN(dob.getTime())) return null;
 
-      let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
-      if (nextBirthday < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
-        nextBirthday = new Date(currentYear + 1, dob.getMonth(), dob.getDate());
+          let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+          if (nextBirthday < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+            nextBirthday = new Date(currentYear + 1, dob.getMonth(), dob.getDate());
+          }
+
+          const diffTime = nextBirthday - new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          return {
+            ...member,
+            nextBirthday,
+            diffDays
+          };
+        })
+        .filter(Boolean)
+        .filter(member => member.diffDays >= 0 && member.diffDays <= daysAhead)
+        .sort((a, b) => a.diffDays - b.diffDays);
+    }
+
+    function showBirthdayReminder() {
+      const todayBirthdays = getTodayBirthdays();
+      if (!todayBirthdays.length) return;
+
+      const names = todayBirthdays.map(member => member.fullName).join(', ');
+      alert(`🎉 Birthday Reminder\n\nToday is the birthday of: ${names}`);
+    }
+
+    function renderBirthdayReminderCard() {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+
+      let existingCard = document.getElementById('birthdayReminderCard');
+      if (existingCard) existingCard.remove();
+
+      const todayBirthdays = getTodayBirthdays();
+      const upcomingBirthdays = getUpcomingBirthdays(7);
+
+      const wrapper = document.createElement('div');
+      wrapper.id = 'birthdayReminderCard';
+      wrapper.className = 'card';
+      wrapper.style.marginTop = '16px';
+
+      let content = '';
+
+      if (todayBirthdays.length) {
+        content += `
+          <div style="margin-bottom:16px;">
+            <div class="section-title">Today's Birthday Reminder</div>
+            ${todayBirthdays.map(member => `
+              <div class="member-card">
+                <h4>🎉 ${member.fullName}</h4>
+                <p class="muted">Class: ${member.memberClass || 'N/A'}</p>
+                <p class="muted">Birthday: ${formatBirthdayDate(member.dob)}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
       }
 
-      const diffTime = nextBirthday - new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      return {
-        ...member,
-        nextBirthday,
-        diffDays
-      };
-    })
-    .filter(Boolean)
-    .filter(member => member.diffDays >= 0 && member.diffDays <= daysAhead)
-    .sort((a, b) => a.diffDays - b.diffDays);
-}
-
-function showBirthdayReminder() {
-  const todayBirthdays = getTodayBirthdays();
-
-  if (!todayBirthdays.length) return;
-
-  const names = todayBirthdays.map(member => member.fullName).join(', ');
-  alert(`🎉 Birthday Reminder\n\nToday is the birthday of: ${names}`);
-}
-
-function renderBirthdayReminderCard() {
-  const dashboard = document.getElementById('dashboard');
-  if (!dashboard) return;
-
-  let existingCard = document.getElementById('birthdayReminderCard');
-  if (existingCard) existingCard.remove();
-
-  const todayBirthdays = getTodayBirthdays();
-  const upcomingBirthdays = getUpcomingBirthdays(7);
-
-  const wrapper = document.createElement('div');
-  wrapper.id = 'birthdayReminderCard';
-  wrapper.className = 'card';
-  wrapper.style.marginTop = '16px';
-
-  let content = '';
-
-  if (todayBirthdays.length) {
-    content += `
-      <div style="margin-bottom:16px;">
-        <div class="section-title">Today's Birthday Reminder</div>
-        ${todayBirthdays.map(member => `
-          <div class="member-card">
-            <h4>🎉 ${member.fullName}</h4>
-            <p class="muted">Class: ${member.memberClass || 'N/A'}</p>
-            <p class="muted">Birthday: ${formatBirthdayDate(member.dob)}</p>
+      if (upcomingBirthdays.length) {
+        content += `
+          <div>
+            <div class="section-title">Upcoming Birthdays</div>
+            ${upcomingBirthdays.map(member => `
+              <div class="record-item">
+                <div>
+                  <strong>${member.fullName}</strong>
+                  <p class="muted">${formatBirthdayDate(member.dob)} • In ${member.diffDays} day${member.diffDays === 1 ? '' : 's'}</p>
+                </div>
+              </div>
+            `).join('')}
           </div>
-        `).join('')}
-      </div>
-    `;
+        `;
+      }
+
+      if (!content) {
+        content = `
+          <div class="section-title">Birthday Reminder</div>
+          <p class="muted">No birthdays today or within the next 7 days.</p>
+        `;
+      }
+
+      wrapper.innerHTML = content;
+      dashboard.appendChild(wrapper);
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (char === '"' && inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current.trim());
+      return result.map(value => value.replace(/^"|"$/g, '').trim());
+    }
+
+   document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+  const csvContent = `fullName,memberNumber,gender,memberClass,dob,phone,note
+John Doe,0241234567,Male,Adult,1995-05-10,0241234567,Regular member
+Jane Smith,0559876543,Female,Youth,,0559876543,Choir member`;
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'members_template.csv';
+  link.click();
+});
+document.getElementById('uploadBulkBtn').addEventListener('click', () => {
+  const fileInput = document.getElementById('bulkFile');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert('Please select an Excel or CSV file.');
+    return;
   }
 
-  if (upcomingBirthdays.length) {
-    content += `
-      <div>
-        <div class="section-title">Upcoming Birthdays</div>
-        ${upcomingBirthdays.map(member => `
-          <div class="record-item">
-            <div>
-              <strong>${member.fullName}</strong>
-              <p class="muted">${formatBirthdayDate(member.dob)} • In ${member.diffDays} day${member.diffDays === 1 ? '' : 's'}</p>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+  const fileName = file.name.toLowerCase();
+  const isCSV = fileName.endsWith('.csv');
+  const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+  if (!isCSV && !isExcel) {
+    alert('Please upload a valid Excel or CSV file.');
+    return;
   }
 
-  if (!content) {
-    content = `
-      <div class="section-title">Birthday Reminder</div>
-      <p class="muted">No birthdays today or within the next 7 days.</p>
-    `;
+  const requiredHeaders = ["fullName", "memberNumber", "gender", "memberClass", "dob", "phone", "note"];
+
+  function normalizeRow(row) {
+    return {
+      fullName: String(row.fullName ?? '').trim(),
+      memberNumber: String(row.memberNumber ?? '').trim(),
+      gender: String(row.gender ?? '').trim(),
+      memberClass: String(row.memberClass ?? '').trim(),
+      dob: String(row.dob ?? '').trim(),
+      phone: String(row.phone ?? '').trim(),
+      note: String(row.note ?? '').trim()
+    };
   }
 
-  wrapper.innerHTML = content;
-  dashboard.appendChild(wrapper);
+  function excelDateToJSDate(serial) {
+  if (!serial) return null;
+
+  // If already normal date string, return it
+  if (isNaN(serial)) return serial;
+
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;
+  const date_info = new Date(utc_value * 1000);
+
+  return date_info.toISOString().split('T')[0]; // YYYY-MM-DD
 }
 
- function renderAll() {
-  renderRegistrationState();
-  renderMembers();
-  renderSearchResults();
-  renderAttendance();
-  renderAbsentees();
-  renderRecords();
-  renderBirthdays();
-  renderBirthdayReminderCard();
-  updateStats();
-}
+  function processRows(rawRows) {
+    if (!rawRows || !rawRows.length) {
+      alert('The file is empty or invalid.');
+      return;
+    }
+
+    const firstRowKeys = Object.keys(rawRows[0] || {});
+    const hasValidHeaders = requiredHeaders.every(header => firstRowKeys.includes(header));
+
+    if (!hasValidHeaders) {
+      alert('Invalid template. Please use the correct Excel/CSV format.');
+      return;
+    }
+
+    let addedCount = 0;
+    let skippedCount = 0;
+    let invalidCount = 0;
+
+    rawRows.forEach((row, index) => {
+      const data = normalizeRow(row);
+
+      if (!data.fullName || !data.memberNumber || !data.gender || !data.memberClass || !data.phone) {
+        invalidCount++;
+        return;
+      }
+
+      if (data.memberNumber !== data.phone) {
+        invalidCount++;
+        return;
+      }
+
+      const exists = members.find(m =>
+        String(m.memberNumber || '').toLowerCase() === data.memberNumber.toLowerCase()
+      );
+
+      if (exists) {
+        skippedCount++;
+        return;
+      }
+
+      members.push({
+        id: Date.now() + index + Math.floor(Math.random() * 10000),
+        fullName: data.fullName,
+        memberNumber: data.memberNumber,
+        gender: data.gender,
+        memberClass: data.memberClass,
+        dob: excelDateToJSDate(data.dob),
+        phone: data.phone,
+        note: data.note || ''
+      });
+
+      addedCount++;
+    });
+
+    saveMembers();
+    renderAll();
+    fileInput.value = '';
+
+    alert(`Upload Complete
+Added: ${addedCount}
+Skipped duplicates: ${skippedCount}
+Invalid rows: ${invalidCount}`);
+  }
+
+  if (isCSV) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const workbook = XLSX.read(text, { type: 'string' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      processRows(rows);
+    };
+
+    reader.readAsText(file);
+    return;
+  }
+
+  if (isExcel) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      processRows(rows);
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+    function renderAll() {
+      renderRegistrationState();
+      renderMembers();
+      renderSearchResults();
+      renderAttendance();
+      renderAbsentees();
+      renderRecords();
+      renderBirthdays();
+      renderBirthdayReminderCard();
+      updateStats();
+    }
 
     updateViewMode();
-renderAll();
-showBirthdayReminder();
+    renderAll();
+    showBirthdayReminder();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
