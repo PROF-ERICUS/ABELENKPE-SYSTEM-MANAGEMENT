@@ -551,11 +551,13 @@ const CHURCH_LOGO = "sda logo.png";
     // const CHURCH_LOGO = "logo.png";
 
     let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
-    let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
-    let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
-    let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
-    let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
-    let editingKidId = null;
+let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
+let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
+let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
+let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
+let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+    
+let editingKidId = null;
 
     const kidsForm = document.getElementById('kidsForm');
     const kidsSearchInput = document.getElementById('kidsSearchInput');
@@ -972,6 +974,40 @@ const CHURCH_LOGO = "sda logo.png";
       renderAll();
     }
 
+    function saveKidsAttendanceHistory() {
+  localStorage.setItem('church_kids_attendance_history', JSON.stringify(kidsAttendanceHistory));
+}
+
+function archiveKidsAttendanceSession() {
+  const today = new Date();
+  const sessionDate = today.toISOString().split('T')[0];
+
+  const alreadySaved = kidsAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
+  if (alreadySaved) return;
+
+  const snapshot = {
+    sessionDate,
+    openedAt: kidsOpenedAt || '',
+    closedAt: kidsClosedAt || new Date().toISOString(),
+    records: kidsRecords.map(kid => {
+      const record = kidsAttendance.find(a => a.kidId === kid.id);
+      return {
+        kidId: kid.id,
+        fullName: kid.name,
+        memberNumber: kid.number || '',
+        gender: kid.gender || '',
+        memberClass: kid.kidClass || '',
+        guardian: kid.guardian || '',
+        phone: kid.phone || '',
+        present: !!(record && record.present),
+        type: 'Kid'
+      };
+    })
+  };
+
+  kidsAttendanceHistory.push(snapshot);
+  saveKidsAttendanceHistory();
+}
     document.getElementById('openKidsAttendance').onclick = () => {
       kidsAttendanceOpen = true;
       kidsOpenedAt = new Date().toISOString();
@@ -986,16 +1022,17 @@ const CHURCH_LOGO = "sda logo.png";
       saveKidsAttendance();
       renderAll();
     };
+document.getElementById('closeKidsAttendance').onclick = () => {
+  kidsAttendanceOpen = false;
+  kidsClosedAt = new Date().toISOString();
 
-    document.getElementById('closeKidsAttendance').onclick = () => {
-      kidsAttendanceOpen = false;
-      kidsClosedAt = new Date().toISOString();
+  localStorage.setItem('kids_attendance_open', false);
+  localStorage.setItem('kids_closed_at', kidsClosedAt);
 
-      localStorage.setItem('kids_attendance_open', false);
-      localStorage.setItem('kids_closed_at', kidsClosedAt);
+  archiveKidsAttendanceSession();
 
-      renderAll();
-    };
+  renderAll();
+};
 
     document.getElementById('markAllKids').onclick = () => {
       if (!kidsAttendanceOpen) {
@@ -1009,6 +1046,7 @@ const CHURCH_LOGO = "sda logo.png";
       renderAll();
     };
 
+    
     function buildKidsReport() {
       const present = kidsAttendance.filter(a => a.present).length;
       const total = kidsRecords.length;
