@@ -1588,7 +1588,7 @@
 
       wrap.innerHTML = absentees.map(member => {
         const phone = member.phone || 'No phone number';
-        const message = `Hello ${member.fullName}, Abelenkpe Seventh Day Adventist Church – Accra Newtown District sincerely missed your presence at church today. You were warmly remembered, and we trust that you are doing well. Kindly let us know how you are faring.`;
+        const message = `Hello ${member.fullName}, Abelenkpe Seventh Day Adventist Church – Accra Newtown District sincerely missed your presence at church today. You were warmly remembered, and we trust that you are doing well. Kindly let us know how you are faring.  God bless you`;
         const whatsappLink = member.phone ? `https://wa.me/${member.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(message)}` : '#';
         return `
           <div class="member-card">
