@@ -483,6 +483,197 @@
         display: none !important;
       }
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --border: #e5e7eb;
+  --shadow: 0 8px 24px rgba(0,0,0,0.06);
+  --radius: 16px;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Layout */
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: #0f172a;
+  color: #fff;
+  padding: 22px 14px;
+}
+
+.brand {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 22px;
+}
+
+.nav-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #cbd5f5;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateX(4px);
+}
+
+.nav-btn.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+/* Content */
+.content {
+  padding: 22px;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.title h1 {
+  font-size: 1.6rem;
+}
+
+.title p {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat-card .value {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+/* Buttons */
+.btn {
+  padding: 11px 15px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
+
+.btn-light {
+  background: #eef2ff;
+  color: #1e3a8a;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+td, th {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Pills */
+.pill {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.present { background: #dcfce7; color: #166534; }
+.absent { background: #fee2e2; color: #991b1b; }
+.open { background: #dbeafe; color: #1d4ed8; }
+.closed { background: #e5e7eb; }
+
+/* Responsive */
+@media(max-width:900px){
+  .app { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2,1fr); }
+}
+
+@media(max-width:500px){
+  .stats { grid-template-columns: 1fr; }
+}
+.hide-sm {
+  display: inline;
+}
+
+@media(max-width:600px){
+  .hide-sm {
+    display: none;
+  }
+}
   </style>
 </head>
 <body>
@@ -508,15 +699,23 @@
           <h1>Church Attendance System</h1>
           <p>Abelenkpe Seventh-day Adventist Church.</p>
         </div>
+
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <button class="btn btn-light" id="switchAdminView">Admin Login</button>
-          <button class="btn btn-light" id="switchMemberView">Member View</button>
-          <button class="btn btn-light" id="switchKidsView">Kids View</button>
-          <button class="btn btn-light" id="switchTrendView">Trend View</button>
-          <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
-          <div class="session-badge" id="sessionStatus">Attendance Closed</div>
-          <div class="session-badge" id="registrationStatus">Registration Closed</div>
-        </div>
+
+  <!-- NEW HOME BUTTON -->
+  <a href="index.html" class="btn btn-light" onclick="goHome(event)">🏠 Home</a>
+
+  <button class="btn btn-light" id="switchAdminView">Admin Login</button>
+  <button class="btn btn-light" id="switchMemberView">Member View</button>
+  <button class="btn btn-light" id="switchKidsView">Kids View</button>
+  <button class="btn btn-light" id="switchTrendView">Trend View</button>
+
+  <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
+
+  <div class="session-badge" id="sessionStatus">Attendance Closed</div>
+  <div class="session-badge" id="registrationStatus">Registration Closed</div>
+
+</div>
       </div>
 
       <section class="stats">
@@ -1588,7 +1787,7 @@
 
       wrap.innerHTML = absentees.map(member => {
         const phone = member.phone || 'No phone number';
-        const message = `Hello ${member.fullName}, Abelenkpe Seventh Day Adventist Church – Accra Newtown District sincerely missed your presence at church today. You were warmly remembered, and we trust that you are doing well. Kindly let us know how you are faring.  God bless you`;
+        const message = `Hello ${member.fullName}, we missed you at church attendance today. We hope you are fine. Please let us know how you are doing. God bless you.`;
         const whatsappLink = member.phone ? `https://wa.me/${member.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(message)}` : '#';
         return `
           <div class="member-card">
@@ -2135,6 +2334,14 @@ Invalid rows: ${invalidCount}`);
     updateViewMode();
     renderAll();
     showBirthdayReminder();
+
+    function goHome(e){
+  e.preventDefault();
+  document.body.style.opacity = 0;
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 200);
+}
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
