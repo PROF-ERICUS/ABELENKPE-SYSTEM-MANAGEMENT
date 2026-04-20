@@ -14,17 +14,28 @@
     :root {
       --primary: #1d4ed8;
       --primary-dark: #0f172a;
+      --primary-soft: #dbeafe;
       --secondary: #60a5fa;
       --white: #ffffff;
+      --text-soft: rgba(255, 255, 255, 0.88);
       --glass: rgba(255, 255, 255, 0.12);
+      --glass-strong: rgba(255, 255, 255, 0.16);
       --glass-border: rgba(255, 255, 255, 0.22);
       --shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+      --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.18);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
     }
 
     body {
       font-family: Arial, Helvetica, sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a, #1d4ed8, #60a5fa);
+      background:
+        radial-gradient(circle at top left, rgba(96, 165, 250, 0.25), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.08), transparent 26%),
+        linear-gradient(135deg, #0f172a, #1d4ed8, #60a5fa);
       color: var(--white);
       overflow-x: hidden;
     }
@@ -34,7 +45,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 22px;
       position: relative;
     }
 
@@ -48,49 +59,74 @@
       position: relative;
       z-index: 2;
       width: 100%;
-      max-width: 1050px;
+      max-width: 1140px;
       background: var(--glass);
       border: 1px solid var(--glass-border);
-      border-radius: 28px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       box-shadow: var(--shadow);
-      padding: 42px 32px;
+      padding: 42px 34px;
       overflow: hidden;
+    }
+
+    .welcome-card::before {
+      content: "";
+      position: absolute;
+      top: -80px;
+      right: -60px;
+      width: 240px;
+      height: 240px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 50%;
+      filter: blur(10px);
+      pointer-events: none;
     }
 
     .welcome-grid {
       display: grid;
       grid-template-columns: 1.05fr 0.95fr;
-      gap: 28px;
+      gap: 30px;
       align-items: center;
+      position: relative;
+      z-index: 1;
     }
 
-    .welcome-left {
+    .welcome-left,
+    .welcome-right {
       width: 100%;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
     }
 
     .logo-wrap {
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      margin-bottom: 20px;
     }
 
     .logo {
-      width: 140px;
-      height: 140px;
+      width: 126px;
+      height: 126px;
       object-fit: contain;
       border-radius: 50%;
       background: #fff;
       padding: 12px;
-      animation: spinLogo 8s linear infinite;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      animation: floatLogo 4s ease-in-out infinite;
+      box-shadow: var(--shadow-soft);
+      border: 3px solid rgba(255,255,255,0.3);
     }
 
     .logo-placeholder {
-      width: 140px;
-      height: 140px;
+      width: 126px;
+      height: 126px;
       border-radius: 50%;
       background: #fff;
       color: var(--primary);
@@ -99,46 +135,92 @@
       justify-content: center;
       font-weight: 800;
       font-size: 1.1rem;
-      animation: spinLogo 8s linear infinite;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      animation: floatLogo 4s ease-in-out infinite;
+      box-shadow: var(--shadow-soft);
+      border: 3px solid rgba(255,255,255,0.3);
     }
 
-    @keyframes spinLogo {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .badge {
-      display: inline-block;
-      padding: 8px 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 14px;
       border-radius: 999px;
       background: rgba(255,255,255,0.14);
       border: 1px solid rgba(255,255,255,0.2);
       font-size: 0.88rem;
       font-weight: 700;
-      margin-bottom: 16px;
+      min-height: 38px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: rgba(255,255,255,0.88);
     }
 
     .title {
       font-size: 2.7rem;
-      line-height: 1.15;
+      line-height: 1.12;
       font-weight: 800;
       margin-bottom: 14px;
     }
 
     .subtitle {
-      font-size: 1.04rem;
-      line-height: 1.7;
-      opacity: 0.96;
+      font-size: 1.03rem;
+      line-height: 1.75;
+      color: var(--text-soft);
       margin-bottom: 24px;
       max-width: 640px;
+    }
+
+    .highlights {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .highlight-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: var(--radius-md);
+      padding: 16px 14px;
+    }
+
+    .highlight-card strong {
+      display: block;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+    }
+
+    .highlight-card span {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+      line-height: 1.55;
     }
 
     .action-row {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 6px;
     }
 
     .btn {
@@ -153,16 +235,18 @@
       align-items: center;
       justify-content: center;
       min-height: 50px;
-      transition: 0.2s ease;
+      transition: 0.25s ease;
     }
 
     .btn-primary {
       background: #fff;
       color: var(--primary);
+      box-shadow: 0 10px 24px rgba(255, 255, 255, 0.16);
     }
 
     .btn-primary:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      background: #f8fbff;
     }
 
     .btn-light {
@@ -172,11 +256,14 @@
     }
 
     .btn-light:hover {
-      background: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
     }
 
-    .welcome-right {
-      width: 100%;
+    .footer-note {
+      margin-top: 22px;
+      font-size: 0.94rem;
+      color: var(--text-soft);
     }
 
     .announcement-box {
@@ -185,6 +272,7 @@
       border: 1px solid var(--glass-border);
       border-radius: 22px;
       overflow: hidden;
+      box-shadow: var(--shadow-soft);
     }
 
     .announcement-head {
@@ -193,11 +281,15 @@
       font-size: 1rem;
       background: rgba(255,255,255,0.12);
       border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .announcement-slider {
       position: relative;
-      min-height: 140px;
+      min-height: 148px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -217,13 +309,36 @@
       transition: all 0.7s ease;
       font-size: 1rem;
       font-weight: 600;
-      line-height: 1.7;
+      line-height: 1.75;
+      color: #fff;
     }
 
     .announcement-item.active {
       opacity: 1;
       transform: translateX(0);
       position: relative;
+    }
+
+    .slider-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 0 16px;
+    }
+
+    .slider-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.22);
+      transition: 0.2s ease;
+    }
+
+    .slider-dot.active {
+      width: 24px;
+      background: #fff;
     }
 
     .quick-info {
@@ -239,6 +354,12 @@
       border-radius: 16px;
       padding: 16px 14px;
       text-align: center;
+      transition: 0.2s ease;
+    }
+
+    .info-box:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.12);
     }
 
     .info-box strong {
@@ -249,13 +370,12 @@
 
     .info-box span {
       font-size: 0.9rem;
-      opacity: 0.94;
+      color: var(--text-soft);
+      line-height: 1.5;
     }
 
-    .footer-note {
-      margin-top: 26px;
-      font-size: 0.94rem;
-      opacity: 0.92;
+    .section-gap {
+      margin-top: 18px;
     }
 
     @media (max-width: 991px) {
@@ -273,7 +393,16 @@
         text-align: center;
       }
 
+      .top-row {
+        flex-direction: column;
+        justify-content: center;
+      }
+
       .logo-wrap {
+        justify-content: center;
+      }
+
+      .badge-group {
         justify-content: center;
       }
 
@@ -304,12 +433,13 @@
         font-size: 0.98rem;
       }
 
+      .highlights,
       .quick-info {
         grid-template-columns: 1fr;
       }
 
       .announcement-slider {
-        min-height: 130px;
+        min-height: 132px;
       }
     }
 
@@ -321,8 +451,8 @@
 
       .logo,
       .logo-placeholder {
-        width: 100px;
-        height: 100px;
+        width: 98px;
+        height: 98px;
         font-size: 0.95rem;
       }
 
@@ -337,7 +467,7 @@
 
       .subtitle {
         font-size: 0.93rem;
-        line-height: 1.6;
+        line-height: 1.65;
       }
 
       .btn {
@@ -363,7 +493,7 @@
       .announcement-item {
         font-size: 0.92rem;
         padding: 18px 12px;
-        line-height: 1.6;
+        line-height: 1.65;
       }
 
       .footer-note {
@@ -395,19 +525,41 @@
     <div class="welcome-card">
       <div class="welcome-grid">
         <div class="welcome-left">
-          <div class="logo-wrap" id="logoWrap"></div>
+          <div class="top-row">
+            <div class="logo-wrap" id="logoWrap"></div>
 
-          <div class="badge">Church Attendance System</div>
+            <div class="badge-group">
+              <div class="badge">Church Attendance System</div>
+              <div class="badge">Faith • Fellowship • Growth</div>
+            </div>
+          </div>
+
+          <div class="eyebrow">You are welcome</div>
 
           <h1 class="title" id="churchTitle">Welcome to Our Church</h1>
 
           <p class="subtitle">
-            A place of worship, fellowship, faith and spiritual growth. We are happy to have you here. Stay informed with our latest church announcements and upcoming birthdays, and enter the church system from here.
+            A warm place of worship, fellowship, service, and spiritual growth. Stay updated with church announcements, celebrate upcoming birthdays, and enter the church system with ease.
           </p>
 
+          <div class="highlights">
+            <div class="highlight-card">
+              <strong>Stay Informed</strong>
+              <span>Quick access to church announcements and important updates.</span>
+            </div>
+            <div class="highlight-card">
+              <strong>Celebrate Members</strong>
+              <span>View upcoming birthdays and keep the church family connected.</span>
+            </div>
+            <div class="highlight-card">
+              <strong>Easy Access</strong>
+              <span>Enter the main system smoothly from one professional welcome page.</span>
+            </div>
+          </div>
+
           <div class="action-row">
-            <a href="main.html" class="btn btn-primary">Enter Church System</a>
-            <a href="main.html" class="btn btn-light">Go to Member Area</a>
+            <a href="main.html" class="btn btn-primary">Open Church System</a>
+            <a href="main.html" class="btn btn-light">Member Area</a>
           </div>
 
           <p class="footer-note">We are glad to have you here. God bless you.</p>
@@ -415,27 +567,33 @@
 
         <div class="welcome-right">
           <div class="announcement-box">
-            <div class="announcement-head">Church Announcements</div>
+            <div class="announcement-head">
+              <span>Church Announcements</span>
+            </div>
             <div class="announcement-slider" id="announcementSlider"></div>
+            <div class="slider-dots" id="announcementDots"></div>
           </div>
 
-          <div class="announcement-box" style="margin-top:18px;">
-            <div class="announcement-head">Upcoming Birthdays</div>
+          <div class="announcement-box section-gap">
+            <div class="announcement-head">
+              <span>Upcoming Birthdays</span>
+            </div>
             <div class="announcement-slider" id="birthdaySlider"></div>
+            <div class="slider-dots" id="birthdayDots"></div>
           </div>
 
           <div class="quick-info">
             <div class="info-box">
               <strong>Worship</strong>
-              <span>Join us in praise and prayer</span>
+              <span>Join us in prayer, praise, and reverence.</span>
             </div>
             <div class="info-box">
               <strong>Fellowship</strong>
-              <span>Grow together as one family</span>
+              <span>Grow together as one caring church family.</span>
             </div>
             <div class="info-box">
               <strong>Service</strong>
-              <span>Serve with love and purpose</span>
+              <span>Serve God and people with love and purpose.</span>
             </div>
           </div>
         </div>
@@ -458,6 +616,8 @@
     const logoWrap = document.getElementById("logoWrap");
     const churchTitle = document.getElementById("churchTitle");
     const announcementSlider = document.getElementById("announcementSlider");
+    const announcementDots = document.getElementById("announcementDots");
+    const birthdayDots = document.getElementById("birthdayDots");
 
     churchTitle.textContent = `Welcome to ${CHURCH_NAME}`;
 
@@ -465,36 +625,58 @@
       ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="logo">`
       : `<div class="logo-placeholder">LOGO</div>`;
 
+    function createDots(container, count, activeIndex = 0) {
+      if (!container) return;
+      if (count <= 1) {
+        container.innerHTML = "";
+        return;
+      }
+      container.innerHTML = Array.from({ length: count }, (_, i) => `
+        <span class="slider-dot ${i === activeIndex ? 'active' : ''}"></span>
+      `).join("");
+    }
+
+    function updateDots(container, activeIndex) {
+      if (!container) return;
+      const dots = container.querySelectorAll(".slider-dot");
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("active", index === activeIndex);
+      });
+    }
+
     if (!CHURCH_ANNOUNCEMENTS.length) {
       announcementSlider.innerHTML = `<div class="announcement-item active">No announcements available at the moment.</div>`;
+      createDots(announcementDots, 0);
     } else {
       announcementSlider.innerHTML = CHURCH_ANNOUNCEMENTS.map((item, index) => `
         <div class="announcement-item ${index === 0 ? 'active' : ''}">${item}</div>
       `).join("");
+      createDots(announcementDots, CHURCH_ANNOUNCEMENTS.length, 0);
     }
 
     let currentAnnouncement = 0;
-    const items = document.querySelectorAll("#announcementSlider .announcement-item");
+    const announcementItems = document.querySelectorAll("#announcementSlider .announcement-item");
 
-    if (items.length > 1) {
+    if (announcementItems.length > 1) {
       setInterval(() => {
-        items.forEach(item => item.classList.remove("active"));
-        currentAnnouncement = (currentAnnouncement + 1) % items.length;
-        items[currentAnnouncement].classList.add("active");
+        announcementItems.forEach(item => item.classList.remove("active"));
+        currentAnnouncement = (currentAnnouncement + 1) % announcementItems.length;
+        announcementItems[currentAnnouncement].classList.add("active");
+        updateDots(announcementDots, currentAnnouncement);
       }, 3500);
     }
 
     function getStoredMembers() {
-      return JSON.parse(localStorage.getItem('church_members') || '[]');
+      return JSON.parse(localStorage.getItem("church_members") || "[]");
     }
 
     function formatBirthdayShort(dateValue) {
-      if (!dateValue) return '';
+      if (!dateValue) return "";
       const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return '';
+      if (isNaN(date.getTime())) return "";
       return date.toLocaleDateString(undefined, {
-        month: 'long',
-        day: 'numeric'
+        month: "long",
+        day: "numeric"
       });
     }
 
@@ -541,17 +723,20 @@
             No upcoming birthdays at the moment.
           </div>
         `;
+        createDots(birthdayDots, 0);
         return;
       }
 
       slider.innerHTML = upcoming.map((m, i) => `
-        <div class="announcement-item ${i === 0 ? 'active' : ''}">
+        <div class="announcement-item ${i === 0 ? "active" : ""}">
           🎂 <strong>${m.fullName}</strong><br>
           ${formatBirthdayShort(m.dob)}
           <br>
-          <small style="opacity:0.9;">In ${m.diffDays} day${m.diffDays === 1 ? '' : 's'}</small>
+          <small style="opacity:0.9;">In ${m.diffDays} day${m.diffDays === 1 ? "" : "s"}</small>
         </div>
       `).join("");
+
+      createDots(birthdayDots, upcoming.length, 0);
     }
 
     function startBirthdaySlider() {
@@ -564,6 +749,7 @@
         items.forEach(i => i.classList.remove("active"));
         index = (index + 1) % items.length;
         items[index].classList.add("active");
+        updateDots(birthdayDots, index);
       }, 4000);
     }
 
