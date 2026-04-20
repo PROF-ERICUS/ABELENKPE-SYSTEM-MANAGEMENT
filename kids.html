@@ -386,6 +386,152 @@
         padding: 24px;
       }
     }
+
+    /* ===== GLOBAL ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.08);
+  --radius: 16px;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== LAYOUT ===== */
+.page {
+  max-width: 1300px;
+  margin: auto;
+  padding: 22px;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.title h1 {
+  font-size: 1.7rem;
+}
+
+.title p {
+  color: var(--muted);
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
+
+.btn-light {
+  background: #eef2ff;
+  color: #1e3a8a;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ===== STATS ===== */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat-card .value {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+/* ===== FORMS ===== */
+.field input,
+.field select,
+.field textarea {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  width: 100%;
+}
+
+/* ===== RECORD CARDS ===== */
+.record-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: white;
+  transition: 0.2s;
+}
+
+.record-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ===== PILLS ===== */
+.pill {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.present { background: #dcfce7; color: #166534; }
+.absent { background: #fee2e2; color: #991b1b; }
+.open { background: #dbeafe; color: #1d4ed8; }
+.closed { background: #e5e7eb; }
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1000px){
+  .stats { grid-template-columns: repeat(3,1fr); }
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
+@media(max-width:600px){
+  .stats { grid-template-columns: 1fr; }
+}
   </style>
 </head>
 <body>
@@ -617,39 +763,44 @@ let editingKidId = null;
     }
 
     function updateStats() {
-      const totalKids = kidsRecords.length;
-      const totalBoys = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'male').length;
-      const totalGirls = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'female').length;
+  const totalKids = kidsRecords.length;
+  const totalBoys = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'male').length;
+  const totalGirls = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'female').length;
 
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const birthdaysThisMonth = kidsRecords.filter(kid => {
-        if (!kid.dob) return false;
-        const dob = new Date(kid.dob);
-        return !isNaN(dob.getTime()) && (dob.getMonth() + 1 === currentMonth);
-      }).length;
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
 
-      const presentCount = kidsAttendance.filter(a => a.present).length;
+  const birthdaysThisMonth = kidsRecords.filter(kid => {
+    if (!kid.dob) return false;
+    const dob = new Date(kid.dob);
+    return !isNaN(dob.getTime()) && (dob.getMonth() + 1 === currentMonth);
+  }).length;
 
-      document.getElementById('totalKids').textContent = totalKids;
-      document.getElementById('totalBoys').textContent = totalBoys;
-      document.getElementById('totalGirls').textContent = totalGirls;
-      document.getElementById('kidsBirthdaysMonth').textContent = birthdaysThisMonth;
+  const presentCount = kidsAttendance.filter(a => a.present).length;
 
-      if (!kidsAttendanceOpen && !kidsClosedAt) {
-        document.getElementById('kidsPresentToday').textContent = 0;
-        document.getElementById('kidsAbsentToday').textContent = 0;
-      } else if (kidsAttendanceOpen && presentCount === 0) {
-        document.getElementById('kidsPresentToday').textContent = 0;
-        document.getElementById('kidsAbsentToday').textContent = 0;
-      } else if (kidsAttendanceOpen) {
-        document.getElementById('kidsPresentToday').textContent = presentCount;
-        document.getElementById('kidsAbsentToday').textContent = 0;
-      } else {
-        document.getElementById('kidsPresentToday').textContent = presentCount;
-        document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
-      }
-    }
+  document.getElementById('totalKids').textContent = totalKids;
+  document.getElementById('totalBoys').textContent = totalBoys;
+  document.getElementById('totalGirls').textContent = totalGirls;
+  document.getElementById('kidsBirthdaysMonth').textContent = birthdaysThisMonth;
+
+  // Attendance closed = reset dashboard counts to 0
+  if (!kidsAttendanceOpen) {
+    document.getElementById('kidsPresentToday').textContent = 0;
+    document.getElementById('kidsAbsentToday').textContent = 0;
+    return;
+  }
+
+  // Attendance open but nobody marked yet = still 0 / 0
+  if (presentCount === 0) {
+    document.getElementById('kidsPresentToday').textContent = 0;
+    document.getElementById('kidsAbsentToday').textContent = 0;
+    return;
+  }
+
+  // Attendance open and some have marked
+  document.getElementById('kidsPresentToday').textContent = presentCount;
+  document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
+}
 
     function getTodayBirthdays() {
       const now = new Date();
@@ -1008,20 +1159,21 @@ function archiveKidsAttendanceSession() {
   kidsAttendanceHistory.push(snapshot);
   saveKidsAttendanceHistory();
 }
-    document.getElementById('openKidsAttendance').onclick = () => {
-      kidsAttendanceOpen = true;
-      kidsOpenedAt = new Date().toISOString();
-      kidsClosedAt = '';
+  document.getElementById('openKidsAttendance').onclick = () => {
+  kidsAttendanceOpen = true;
+  kidsOpenedAt = new Date().toISOString();
+  kidsClosedAt = '';
 
-      localStorage.setItem('kids_attendance_open', true);
-      localStorage.setItem('kids_opened_at', kidsOpenedAt);
-      localStorage.removeItem('kids_closed_at');
+  localStorage.setItem('kids_attendance_open', true);
+  localStorage.setItem('kids_opened_at', kidsOpenedAt);
+  localStorage.removeItem('kids_closed_at');
 
-      ensureKidsAttendance();
-      kidsAttendance.forEach(a => a.present = false);
-      saveKidsAttendance();
-      renderAll();
-    };
+  ensureKidsAttendance();
+  kidsAttendance.forEach(a => a.present = false);
+  saveKidsAttendance();
+  renderAll();
+};
+
 document.getElementById('closeKidsAttendance').onclick = () => {
   kidsAttendanceOpen = false;
   kidsClosedAt = new Date().toISOString();
@@ -1030,7 +1182,6 @@ document.getElementById('closeKidsAttendance').onclick = () => {
   localStorage.setItem('kids_closed_at', kidsClosedAt);
 
   archiveKidsAttendanceSession();
-
   renderAll();
 };
 
@@ -1157,6 +1308,18 @@ document.getElementById('closeKidsAttendance').onclick = () => {
     };
 
     renderAll();
+
+    let searchTimer;
+
+kidsSearchInput.addEventListener('input', () => {
+  renderSearchResults();
+
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    document.getElementById('kidsSearchResults').innerHTML =
+      '<p class="empty-state">Search cleared.</p>';
+  }, 30000); // 30 seconds
+});
   </script>
 </body>
 </html>
