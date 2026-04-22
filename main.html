@@ -823,7 +823,8 @@ td, th {
                 <textarea id="note" placeholder="Optional note"></textarea>
               </div>
               <div class="btn-row">
-                <button type="submit" class="btn btn-primary">Save Member</button>
+                <button type="submit" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
+                <button type="button" class="btn btn-light" id="cancelMemberEditBtn" style="display:none;">Cancel Edit</button>
               </div>
             </form>
 
@@ -1065,6 +1066,7 @@ td, th {
     let records = JSON.parse(localStorage.getItem('church_records') || '[]');
     let memberAttendanceHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
     let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
+    let editingMemberId = null;
 
     function saveMemberAttendanceHistory() {
       localStorage.setItem('church_member_attendance_history', JSON.stringify(memberAttendanceHistory));
@@ -1231,6 +1233,30 @@ td, th {
 
     const memberForm = document.getElementById('memberForm');
     const memberSelfRegisterForm = document.getElementById('memberSelfRegisterForm');
+    const saveMemberBtn = document.getElementById('saveMemberBtn');
+    const cancelMemberEditBtn = document.getElementById('cancelMemberEditBtn');
+
+    function updateMemberEditUI() {
+      if (!saveMemberBtn || !cancelMemberEditBtn) return;
+
+      if (editingMemberId !== null) {
+        saveMemberBtn.textContent = 'Update Member';
+        cancelMemberEditBtn.style.display = 'inline-block';
+      } else {
+        saveMemberBtn.textContent = 'Save Member';
+        cancelMemberEditBtn.style.display = 'none';
+      }
+    }
+
+    function resetMemberEditState() {
+      editingMemberId = null;
+      memberForm.reset();
+      updateMemberEditUI();
+    }
+
+    cancelMemberEditBtn.addEventListener('click', () => {
+      resetMemberEditState();
+    });
 
     memberForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1254,25 +1280,56 @@ td, th {
         return;
       }
 
-      const existing = members.find(m => (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase());
+      const existing = members.find(m =>
+        (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase() &&
+        m.id !== editingMemberId
+      );
+
       if (existing) {
         alert('Registered number already exists.');
         return;
       }
 
-      members.push({
-        id: Date.now(),
-        fullName,
-        memberNumber,
-        gender,
-        memberClass,
-        dob,
-        phone,
-        note
-      });
+      if (editingMemberId !== null) {
+        const memberIndex = members.findIndex(m => m.id === editingMemberId);
+
+        if (memberIndex === -1) {
+          alert('Member being edited was not found.');
+          resetMemberEditState();
+          renderAll();
+    updateMemberEditUI();
+          return;
+        }
+
+        members[memberIndex] = {
+          ...members[memberIndex],
+          fullName,
+          memberNumber,
+          gender,
+          memberClass,
+          dob,
+          phone,
+          note
+        };
+
+        alert('Member updated successfully.');
+      } else {
+        members.push({
+          id: Date.now(),
+          fullName,
+          memberNumber,
+          gender,
+          memberClass,
+          dob,
+          phone,
+          note
+        });
+
+        alert('Member saved successfully.');
+      }
 
       saveMembers();
-      memberForm.reset();
+      resetMemberEditState();
       renderAll();
     });
 
@@ -1352,6 +1409,11 @@ td, th {
     }
 
     window.deleteMember = function(id) {
+  if (editingMemberId !== null) {
+    alert('Please save or cancel the current member edit before deleting a member.');
+    return;
+  }
+
   const member = members.find(member => member.id === id);
   if (!member) return;
 
@@ -1370,8 +1432,15 @@ td, th {
 }
 
     window.editMember = function(id) {
+      if (editingMemberId !== null && editingMemberId !== id) {
+        alert('Please save or cancel the current member edit before editing another member.');
+        return;
+      }
+
       const member = members.find(m => m.id === id);
       if (!member) return;
+
+      editingMemberId = id;
 
       document.getElementById('fullName').value = member.fullName;
       document.getElementById('memberNumber').value = member.memberNumber;
@@ -1381,9 +1450,7 @@ td, th {
       document.getElementById('phone').value = member.phone || '';
       document.getElementById('note').value = member.note || '';
 
-      members = members.filter(m => m.id !== id);
-      saveMembers();
-      renderAll();
+      updateMemberEditUI();
       goToSection('member-registration');
     }
 
@@ -2365,6 +2432,7 @@ Invalid rows: ${invalidCount}`);
       renderBirthdays();
       renderBirthdayReminderCard();
       updateStats();
+      updateMemberEditUI();
     }
 
     updateViewMode();
