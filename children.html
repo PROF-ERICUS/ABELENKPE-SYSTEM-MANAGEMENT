@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kids System | Church Attendance System</title>
+  <title>Children System | Church Attendance System</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -431,7 +431,7 @@
   <main class="page">
     <div class="topbar">
       <div class="title">
-        <h1>Kids System</h1>
+        <h1>Children System</h1>
         <p>Separate records and attendance system for children in the church.</p>
       </div>
 
@@ -442,7 +442,7 @@
 
     <section class="stats">
       <div class="card stat-card">
-        <h3>Total Kids</h3>
+        <h3>Total Children</h3>
         <div class="value" id="totalKids">0</div>
       </div>
       <div class="card stat-card">
@@ -455,21 +455,21 @@
       </div>
       <div class="card stat-card">
         <h3>Present Today</h3>
-        <div class="value" id="kidsPresentToday">0</div>
+        <div class="value" id="ChildrenPresentToday">0</div>
       </div>
       <div class="card stat-card">
         <h3>Absentees</h3>
-        <div class="value" id="kidsAbsentToday">0</div>
+        <div class="value" id="ChildrenAbsentToday">0</div>
       </div>
       <div class="card stat-card">
         <h3>Birthdays This Month</h3>
-        <div class="value" id="kidsBirthdaysMonth">0</div>
+        <div class="value" id="ChildrenBirthdaysMonth">0</div>
       </div>
     </section>
 
     <section class="grid-3">
       <div class="card">
-        <div class="section-title" id="kidsFormTitle">Register Kid</div>
+        <div class="section-title" id="kidsFormTitle">Register Child</div>
         <form id="kidsForm">
           <div class="field">
             <label>Full Name</label>
@@ -526,17 +526,14 @@
           </div>
 
           <div class="btn-row">
-            <button type="submit" class="btn btn-primary" id="saveKidBtn">Save Kid Record</button>
+            <button type="submit" class="btn btn-primary" id="saveKidBtn">Save Child Record</button>
             <button type="button" class="btn btn-light" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
           </div>
         </form>
 
         <div class="import-box">
           <div class="section-title">Bulk Excel Registration</div>
-          <p class="import-help">
-            Upload Excel or CSV file with these columns:
-            <strong>Full Name, Registered Number, Gender, Class / Group, Date of Birth, Parent / Guardian Name, Parent / Guardian Phone, Address, Medical / Special Note</strong>
-          </p>
+         
 
           <div class="field">
             <label>Select Excel / CSV File</label>
@@ -554,7 +551,7 @@
 
       <div class="card">
         <div class="toolbar">
-          <div class="section-title">Search Kids Records</div>
+          <div class="section-title">Search Children Records</div>
           <input type="text" id="kidsSearchInput" class="search-input" placeholder="Search by name or number..." />
         </div>
         <div id="kidsSearchResults" class="empty-state">Search results will appear here.</div>
@@ -573,7 +570,7 @@
 
     <section class="card" style="margin-bottom:24px;">
       <div class="toolbar">
-        <div class="section-title">Kids Attendance Control</div>
+        <div class="section-title">Children Attendance Control</div>
         <span id="kidsAttendancePill" class="pill closed">Closed</span>
       </div>
 
@@ -591,13 +588,13 @@
     </section>
 
     <section class="card" style="margin-bottom:24px;">
-      <div class="section-title">Kids Attendance</div>
-      <div id="kidsAttendanceTable" class="empty-state">No kids available.</div>
+      <div class="section-title">Children Attendance</div>
+      <div id="kidsAttendanceTable" class="empty-state">No Children available.</div>
     </section>
 
     <section class="card">
-      <div class="section-title">Stored Kids Records</div>
-      <div id="kidsRecordsList" class="empty-state">No kids records saved yet.</div>
+      <div class="section-title">Stored Children Records</div>
+      <div id="kidsRecordsList" class="empty-state">No Children records saved yet.</div>
     </section>
 
     <div id="kidsPrintArea" class="report-print"></div>
@@ -1175,7 +1172,7 @@
               </tr>
             `;
           }).join('')
-        : `<tr><td colspan="8" style="text-align:center;">No kids records available.</td></tr>`;
+        : `<tr><td colspan="8" style="text-align:center;">No Children records available.</td></tr>`;
 
       const logoMarkup = CHURCH_LOGO
         ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="report-logo">`
@@ -1193,7 +1190,7 @@
 
         <div class="report-summary">
           <div class="summary-box">
-            <strong>Total Kids</strong>
+            <strong>Total Children</strong>
             <span>${total}</span>
           </div>
           <div class="summary-box">
