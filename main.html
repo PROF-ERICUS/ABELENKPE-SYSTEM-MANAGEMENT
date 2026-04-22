@@ -1352,13 +1352,22 @@ td, th {
     }
 
     window.deleteMember = function(id) {
-      if (!confirm('Delete this member?')) return;
-      members = members.filter(member => member.id !== id);
-      attendance = attendance.filter(a => a.memberId !== id);
-      saveMembers();
-      saveAttendance();
-      renderAll();
-    }
+  const member = members.find(member => member.id === id);
+  if (!member) return;
+
+  if (!confirm(`Are you sure you want to delete member "${member.fullName}"?`)) return;
+
+  moveToRecycleBin('member', member);
+
+  members = members.filter(member => member.id !== id);
+  attendance = attendance.filter(a => a.memberId !== id);
+
+  saveMembers();
+  saveAttendance();
+  renderAll();
+
+  alert('Member moved to recycle bin successfully.');
+}
 
     window.editMember = function(id) {
       const member = members.find(m => m.id === id);
