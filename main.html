@@ -1848,11 +1848,19 @@ td, th {
       `).join('');
     }
 
-    window.deleteRecord = function(id) {
-      records = records.filter(record => record.id !== id);
-      saveRecords();
-      renderRecords();
-    }
+   window.deleteRecord = function(id) {
+  const confirmDelete = confirm("Are you sure you want to delete this record?");
+
+  if (!confirmDelete) {
+    return; // stop if user cancels
+  }
+
+  records = records.filter(record => record.id !== id);
+  saveRecords();
+  renderRecords();
+
+  alert("Record deleted successfully.");
+}
 
     function renderBirthdays() {
       const now = new Date();
