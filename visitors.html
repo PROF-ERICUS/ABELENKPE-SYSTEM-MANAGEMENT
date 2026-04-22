@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Church Visitors Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #667085;
+      --primary: #1d4ed8;
+      --primary-dark: #163ea9;
+      --success: #15803d;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .title h1 {
+      font-size: 1.7rem;
+      margin-bottom: 4px;
+    }
+
+    .title p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .stat-card h3 {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 1.9rem;
+      font-weight: 800;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      font-size: 0.95rem;
+      background: #fff;
+      font-family: inherit;
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: #fff;
+    }
+
+    .btn-light {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      margin-bottom: 14px;
+    }
+
+    .visitor-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .visitor-card h4 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .record-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .pill.regular {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill.returning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .pill.new {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .pill.followup {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (max-width: 980px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .title h1 {
+        font-size: 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="title">
+      <h1>Church Visitors Page</h1>
+      <p>Track visitors, identify weekly visitors, and follow up those who need attention.</p>
+    </div>
+
+    <div class="btn-row">
+      <a href="main.html" class="btn btn-light">🏠 Back to Main System</a>
+    </div>
+  </div>
+
+  <section class="stats">
+    <div class="card stat-card">
+      <h3>Total Visitors</h3>
+      <div class="value" id="totalVisitors">0</div>
+    </div>
+    <div class="card stat-card">
+      <h3>Visitors This Week</h3>
+      <div class="value" id="visitorsThisWeek">0</div>
+    </div>
+    <div class="card stat-card">
+      <h3>First-Time This Week</h3>
+      <div class="value" id="firstTimeThisWeek">0</div>
+    </div>
+    <div class="card stat-card">
+      <h3>Follow Up Needed</h3>
+      <div class="value" id="followUpCount">0</div>
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">Register Visitor</div>
+      <form id="visitorForm">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="visitorName" required />
+        </div>
+
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="text" id="visitorPhone" required />
+        </div>
+
+        <div class="field">
+          <label>Gender</label>
+          <select id="visitorGender" required>
+            <option value="">Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Address</label>
+          <input type="text" id="visitorAddress" />
+        </div>
+
+        <div class="field">
+          <label>Invited By</label>
+          <input type="text" id="invitedBy" />
+        </div>
+
+        <div class="field">
+          <label>Sabbath School Class</label>
+          <input type="text" id="visitorClass" />
+        </div>
+
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="visitorDob" />
+        </div>
+
+        <div class="field">
+          <label>Note</label>
+          <textarea id="visitorNote" placeholder="Optional note"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary" id="saveVisitorBtn">Save Visitor</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Visitor Follow Up Dashboard</div>
+
+      <div style="margin-bottom: 12px;">
+        <strong id="weeklyVisitorsCount">0</strong> weekly visitor(s)
+      </div>
+
+      <div id="weeklyVisitorList" class="muted" style="margin-bottom:16px;">No weekly visitors yet.</div>
+
+      <div class="section-title" style="margin-top:16px;">Follow Up List</div>
+      <div id="followUpList" class="muted">No visitor follow-up needed.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <div class="section-title">Visitors List</div>
+    <input
+      type="text"
+      id="visitorSearch"
+      class="search-input"
+      placeholder="Search by name or phone number..."
+    />
+    <div id="visitorList"></div>
+  </div>
+
+  <script>
+    let visitors = JSON.parse(localStorage.getItem('church_visitors') || '[]');
+    let members = JSON.parse(localStorage.getItem('church_members') || '[]');
+    let editingVisitorId = null;
+
+    const visitorForm = document.getElementById('visitorForm');
+    const visitorList = document.getElementById('visitorList');
+    const visitorSearch = document.getElementById('visitorSearch');
+    const saveVisitorBtn = document.getElementById('saveVisitorBtn');
+
+    function saveVisitors() {
+      localStorage.setItem('church_visitors', JSON.stringify(visitors));
+    }
+
+    function getTodayString() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+
+    function getStartOfWeek(date = new Date()) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay();
+      const diff = d.getDate() - day;
+      d.setDate(diff);
+      return d;
+    }
+
+    function getWeekKey(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      const start = getStartOfWeek(date);
+      return start.toISOString().split('T')[0];
+    }
+
+    function getCurrentWeekKey() {
+      return getWeekKey(getTodayString());
+    }
+
+    function getUniqueWeekKeys(visitHistory = []) {
+      return [...new Set(visitHistory.map(date => getWeekKey(date)).filter(Boolean))].sort();
+    }
+
+    function hasVisitedThisWeek(visitor) {
+      const currentWeek = getCurrentWeekKey();
+      return (visitor.visitHistory || []).some(date => getWeekKey(date) === currentWeek);
+    }
+
+    function isFirstTimeThisWeek(visitor) {
+      const history = visitor.visitHistory || [];
+      return history.length === 1 && hasVisitedThisWeek(visitor);
+    }
+
+    function isReturningThisWeek(visitor) {
+      const history = visitor.visitHistory || [];
+      return history.length > 1 && hasVisitedThisWeek(visitor);
+    }
+
+    function isWeeklyVisitor(visitor) {
+      const weeks = getUniqueWeekKeys(visitor.visitHistory || []);
+      if (weeks.length < 3) return false;
+
+      for (let i = 1; i < weeks.length; i++) {
+        const prev = new Date(weeks[i - 1]);
+        const current = new Date(weeks[i]);
+        const diffDays = Math.round((current - prev) / (1000 * 60 * 60 * 24));
+
+        if (diffDays !== 7) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function needsFollowUp(visitor) {
+      const totalVisits = (visitor.visitHistory || []).length;
+      return totalVisits === 1 || !isWeeklyVisitor(visitor);
+    }
+
+    function formatDate(dateValue) {
+      if (!dateValue) return 'N/A';
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return dateValue;
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+  function buildFollowUpMessage(visitor) {
+  const totalVisits = (visitor.visitHistory || []).length;
+  const serviceTime = "9:00 AM";
+  const nextSabbath = getNextSabbathDate();
+
+  if (totalVisits === 1) {
+    return `Hello ${visitor.fullName}, thank you for visiting Abelenkpe Seventh-Day Adventist Church. We were happy to have you worship with us. We would be glad to see you again on ${nextSabbath} at ${serviceTime}. God bless you.\n\nAbelenkpe Seventh-Day Adventist Church`;
+  }
+
+  return `Hello ${visitor.fullName}, we hope you are doing well. We have missed seeing you in church lately, and you have been remembered at Abelenkpe Seventh-Day Adventist Church. We would be glad to have you worship with us again on ${nextSabbath} at ${serviceTime}. Your presence means a lot to us. God bless you.\n\nAbelenkpe Seventh-Day Adventist Church`;
+}
+
+    function buildFollowUpLink(visitor) {
+      const cleanPhone = (visitor.phone || '').replace(/[^0-9]/g, '');
+      return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(buildFollowUpMessage(visitor))}`;
+    }
+
+    function renderDashboard() {
+      const totalVisitors = visitors.length;
+      const visitorsThisWeek = visitors.filter(hasVisitedThisWeek).length;
+      const firstTimeThisWeek = visitors.filter(isFirstTimeThisWeek).length;
+      const weeklyVisitors = visitors.filter(isWeeklyVisitor);
+      const followUpVisitors = visitors.filter(needsFollowUp);
+
+      document.getElementById('totalVisitors').textContent = totalVisitors;
+      document.getElementById('visitorsThisWeek').textContent = visitorsThisWeek;
+      document.getElementById('firstTimeThisWeek').textContent = firstTimeThisWeek;
+      document.getElementById('followUpCount').textContent = followUpVisitors.length;
+      document.getElementById('weeklyVisitorsCount').textContent = weeklyVisitors.length;
+
+      const weeklyVisitorList = document.getElementById('weeklyVisitorList');
+      const followUpList = document.getElementById('followUpList');
+
+      if (!weeklyVisitors.length) {
+        weeklyVisitorList.innerHTML = '<p class="muted">No weekly visitors yet.</p>';
+      } else {
+        weeklyVisitorList.innerHTML = weeklyVisitors.map(visitor => `
+          <div class="record-item">
+            <strong>${visitor.fullName}</strong>
+            <p class="muted">Phone: ${visitor.phone || 'N/A'}</p>
+            <p class="muted">Weeks attended: ${getUniqueWeekKeys(visitor.visitHistory || []).length}</p>
+            <span class="pill regular">Weekly Visitor</span>
+          </div>
+        `).join('');
+      }
+
+      if (!followUpVisitors.length) {
+        followUpList.innerHTML = '<p class="muted">No visitor follow-up needed.</p>';
+      } else {
+        followUpList.innerHTML = followUpVisitors.map(visitor => {
+          const totalVisits = (visitor.visitHistory || []).length;
+          return `
+            <div class="record-item">
+              <strong>${visitor.fullName}</strong>
+              <p class="muted">Phone: ${visitor.phone || 'N/A'}</p>
+              <p class="muted">Total Visits: ${totalVisits}</p>
+              <p class="muted">${totalVisits === 1 ? 'One-time visitor' : 'Not attending every week'}</p>
+              ${
+                visitor.phone
+                  ? `<a href="${buildFollowUpLink(visitor)}" target="_blank" class="btn btn-success" style="margin-top:8px;">Send Follow Up</a>`
+                  : `<p class="muted">No phone number available.</p>`
+              }
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderVisitors() {
+      const query = visitorSearch.value.trim().toLowerCase();
+
+      const filteredVisitors = visitors.filter(visitor =>
+        (visitor.fullName || '').toLowerCase().includes(query) ||
+        (visitor.phone || '').toLowerCase().includes(query)
+      );
+
+      if (!filteredVisitors.length) {
+        visitorList.innerHTML = '<p class="muted">No visitors found.</p>';
+        return;
+      }
+
+      visitorList.innerHTML = filteredVisitors.map(visitor => {
+        const visitHistory = visitor.visitHistory || [];
+        const totalVisits = visitHistory.length;
+        const lastVisit = totalVisits ? visitHistory[visitHistory.length - 1] : '';
+
+        let statusPill = '<span class="pill new">One-Time Visitor</span>';
+
+        if (isWeeklyVisitor(visitor)) {
+          statusPill = '<span class="pill regular">Weekly Visitor</span>';
+        } else if (totalVisits > 1) {
+          statusPill = '<span class="pill followup">Needs Follow Up</span>';
+        }
+
+        return `
+          <div class="visitor-card">
+            <h4>${visitor.fullName}</h4>
+            <p class="muted">Phone: ${visitor.phone || 'N/A'}</p>
+            <p class="muted">Gender: ${visitor.gender || 'N/A'}</p>
+            <p class="muted">Address: ${visitor.address || 'N/A'}</p>
+            <p class="muted">Invited By: ${visitor.invitedBy || 'N/A'}</p>
+            <p class="muted">Class: ${visitor.memberClass || 'N/A'}</p>
+            <p class="muted">DOB: ${visitor.dob ? formatDate(visitor.dob) : 'N/A'}</p>
+            <p class="muted">Note: ${visitor.note || 'N/A'}</p>
+            <p class="muted">Total Visits: ${totalVisits}</p>
+            <p class="muted">Last Visit: ${lastVisit ? formatDate(lastVisit) : 'No visit recorded yet'}</p>
+            ${statusPill}
+
+            <div class="btn-row">
+              <button class="btn btn-success" onclick="markVisitorPresentToday(${visitor.id})">Mark Visit Today</button>
+              <button class="btn btn-warning" onclick="convertToMember(${visitor.id})">Convert to Member</button>
+              <button class="btn btn-primary" onclick="editVisitor(${visitor.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteVisitor(${visitor.id})">Delete</button>
+              ${
+                needsFollowUp(visitor) && visitor.phone
+                  ? `<a class="btn btn-light" target="_blank" href="${buildFollowUpLink(visitor)}">Follow Up</a>`
+                  : ''
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderVisitors();
+    }
+
+    visitorForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById('visitorName').value.trim();
+      const phone = document.getElementById('visitorPhone').value.trim();
+      const gender = document.getElementById('visitorGender').value;
+      const address = document.getElementById('visitorAddress').value.trim();
+      const invitedBy = document.getElementById('invitedBy').value.trim();
+      const memberClass = document.getElementById('visitorClass').value.trim();
+      const dob = document.getElementById('visitorDob').value || null;
+      const note = document.getElementById('visitorNote').value.trim();
+
+      if (!fullName || !phone || !gender) {
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      const duplicate = visitors.find(v =>
+        v.id !== editingVisitorId &&
+        (v.phone || '').toLowerCase() === phone.toLowerCase()
+      );
+
+      if (duplicate) {
+        alert('This visitor phone number already exists.');
+        return;
+      }
+
+      if (editingVisitorId) {
+        const visitor = visitors.find(v => v.id === editingVisitorId);
+        if (!visitor) return;
+
+        visitor.fullName = fullName;
+        visitor.phone = phone;
+        visitor.gender = gender;
+        visitor.address = address;
+        visitor.invitedBy = invitedBy;
+        visitor.memberClass = memberClass;
+        visitor.dob = dob;
+        visitor.note = note;
+      } else {
+        visitors.push({
+          id: Date.now(),
+          fullName,
+          phone,
+          gender,
+          address,
+          invitedBy,
+          memberClass,
+          dob,
+          note,
+          visitHistory: [getTodayString()]
+        });
+      }
+
+      saveVisitors();
+      visitorForm.reset();
+      editingVisitorId = null;
+      saveVisitorBtn.textContent = 'Save Visitor';
+      renderAll();
+    });
+
+    window.markVisitorPresentToday = function(id) {
+      const visitor = visitors.find(v => v.id === id);
+      if (!visitor) return;
+
+      if (!Array.isArray(visitor.visitHistory)) {
+        visitor.visitHistory = [];
+      }
+
+      const today = getTodayString();
+
+      if (visitor.visitHistory.includes(today)) {
+        alert('This visitor has already been marked for today.');
+        return;
+      }
+
+      visitor.visitHistory.push(today);
+      visitor.visitHistory.sort();
+
+      saveVisitors();
+      renderAll();
+      alert(visitor.fullName + ' marked present for today.');
+    };
+
+    window.editVisitor = function(id) {
+      const visitor = visitors.find(v => v.id === id);
+      if (!visitor) return;
+
+      editingVisitorId = id;
+
+      document.getElementById('visitorName').value = visitor.fullName || '';
+      document.getElementById('visitorPhone').value = visitor.phone || '';
+      document.getElementById('visitorGender').value = visitor.gender || '';
+      document.getElementById('visitorAddress').value = visitor.address || '';
+      document.getElementById('invitedBy').value = visitor.invitedBy || '';
+      document.getElementById('visitorClass').value = visitor.memberClass || '';
+      document.getElementById('visitorDob').value = visitor.dob || '';
+      document.getElementById('visitorNote').value = visitor.note || '';
+
+      saveVisitorBtn.textContent = 'Update Visitor';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.deleteVisitor = function(id) {
+      if (!confirm('Delete this visitor?')) return;
+
+      visitors = visitors.filter(visitor => visitor.id !== id);
+      saveVisitors();
+      renderAll();
+    };
+
+    window.convertToMember = function(id) {
+      const visitor = visitors.find(v => v.id === id);
+      if (!visitor) return;
+
+      const existsInMembers = members.find(m =>
+        (m.phone || '').toLowerCase() === (visitor.phone || '').toLowerCase() ||
+        (m.memberNumber || '').toLowerCase() === (visitor.phone || '').toLowerCase()
+      );
+
+      if (existsInMembers) {
+        alert('This visitor already exists as a member.');
+        return;
+      }
+
+      localStorage.setItem('prefill_member', JSON.stringify({
+        fullName: visitor.fullName,
+        phone: visitor.phone,
+        gender: visitor.gender,
+        memberClass: visitor.memberClass || '',
+        dob: visitor.dob || '',
+        note: 'Converted from visitor record'
+      }));
+
+      visitors = visitors.filter(v => v.id !== id);
+      saveVisitors();
+
+      window.location.href = 'main.html?refresh=1';
+    };
+
+    visitorSearch.addEventListener('input', renderVisitors);
+
+    renderAll();
+    function getNextSabbathDate() {
+  const today = new Date();
+  const day = today.getDay(); // Sunday = 0, Saturday = 6
+  const daysUntilSaturday = (6 - day + 7) % 7 || 7;
+
+  const nextSabbath = new Date(today);
+  nextSabbath.setDate(today.getDate() + daysUntilSaturday);
+
+  return nextSabbath.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+  </script>
+</body>
+</html>
