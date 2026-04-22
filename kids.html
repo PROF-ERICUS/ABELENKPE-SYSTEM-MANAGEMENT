@@ -69,6 +69,11 @@
       font-size: 0.95rem;
       text-decoration: none;
       display: inline-block;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
     }
 
     .btn-primary {
@@ -340,6 +345,40 @@
       color: #000;
     }
 
+    .import-box {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .import-help {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .import-status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      display: none;
+    }
+
+    .import-status.success {
+      display: block;
+      background: #ecfdf3;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .import-status.error {
+      display: block;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
     @media (max-width: 1100px) {
       .stats { grid-template-columns: repeat(3, 1fr); }
       .grid-3 { grid-template-columns: 1fr; }
@@ -386,152 +425,6 @@
         padding: 24px;
       }
     }
-
-    /* ===== GLOBAL ===== */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #f4f7fb;
-  --card: #ffffff;
-  --text: #111827;
-  --muted: #6b7280;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --success: #16a34a;
-  --danger: #dc2626;
-  --warning: #d97706;
-  --border: #e5e7eb;
-  --shadow: 0 10px 30px rgba(0,0,0,0.08);
-  --radius: 16px;
-}
-
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* ===== LAYOUT ===== */
-.page {
-  max-width: 1300px;
-  margin: auto;
-  padding: 22px;
-}
-
-/* ===== TOPBAR ===== */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 22px;
-  flex-wrap: wrap;
-}
-
-.title h1 {
-  font-size: 1.7rem;
-}
-
-.title p {
-  color: var(--muted);
-}
-
-/* ===== BUTTONS ===== */
-.btn {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-}
-
-.btn-primary { background: var(--primary); color: white; }
-.btn-success { background: var(--success); color: white; }
-.btn-danger { background: var(--danger); color: white; }
-.btn-warning { background: var(--warning); color: white; }
-
-.btn-light {
-  background: #eef2ff;
-  color: #1e3a8a;
-}
-
-/* ===== CARDS ===== */
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 18px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  transition: 0.2s;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-}
-
-/* ===== STATS ===== */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-.stat-card .value {
-  font-size: 1.8rem;
-  font-weight: 800;
-}
-
-/* ===== FORMS ===== */
-.field input,
-.field select,
-.field textarea {
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  width: 100%;
-}
-
-/* ===== RECORD CARDS ===== */
-.record-card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
-  background: white;
-  transition: 0.2s;
-}
-
-.record-card:hover {
-  transform: translateY(-2px);
-}
-
-/* ===== PILLS ===== */
-.pill {
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-.present { background: #dcfce7; color: #166534; }
-.absent { background: #fee2e2; color: #991b1b; }
-.open { background: #dbeafe; color: #1d4ed8; }
-.closed { background: #e5e7eb; }
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:1000px){
-  .stats { grid-template-columns: repeat(3,1fr); }
-  .grid-3 { grid-template-columns: 1fr; }
-}
-
-@media(max-width:600px){
-  .stats { grid-template-columns: 1fr; }
-}
   </style>
 </head>
 <body>
@@ -637,6 +530,26 @@ body {
             <button type="button" class="btn btn-light" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
           </div>
         </form>
+
+        <div class="import-box">
+          <div class="section-title">Bulk Excel Registration</div>
+          <p class="import-help">
+            Upload Excel or CSV file with these columns:
+            <strong>Full Name, Registered Number, Gender, Class / Group, Date of Birth, Parent / Guardian Name, Parent / Guardian Phone, Address, Medical / Special Note</strong>
+          </p>
+
+          <div class="field">
+            <label>Select Excel / CSV File</label>
+            <input type="file" id="bulkExcelFile" accept=".xlsx,.xls,.csv" />
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-light" id="downloadKidsTemplate">Download Template</button>
+            <button type="button" class="btn btn-success" id="importKidsExcel">Import Excel Records</button>
+          </div>
+
+          <div id="importStatus" class="import-status"></div>
+        </div>
       </div>
 
       <div class="card">
@@ -690,24 +603,26 @@ body {
     <div id="kidsPrintArea" class="report-print"></div>
   </main>
 
+  <!-- SheetJS for Excel import/export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
   <script>
     const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
-const CHURCH_LOGO = "sda logo.png";
-    // Example:
-    // const CHURCH_LOGO = "logo.png";
+    const CHURCH_LOGO = "sda logo.png";
 
     let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
-let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
-let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
-let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
-let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
-let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
-    
-let editingKidId = null;
+    let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
+    let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
+    let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
+    let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
+    let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+
+    let editingKidId = null;
 
     const kidsForm = document.getElementById('kidsForm');
     const kidsSearchInput = document.getElementById('kidsSearchInput');
     const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const importStatus = document.getElementById('importStatus');
 
     function saveKidsRecords() {
       localStorage.setItem('church_kids_records', JSON.stringify(kidsRecords));
@@ -715,6 +630,15 @@ let editingKidId = null;
 
     function saveKidsAttendance() {
       localStorage.setItem('kids_attendance', JSON.stringify(kidsAttendance));
+    }
+
+    function saveKidsAttendanceHistory() {
+      localStorage.setItem('church_kids_attendance_history', JSON.stringify(kidsAttendanceHistory));
+    }
+
+    function showImportStatus(message, type = 'success') {
+      importStatus.className = 'import-status ' + type;
+      importStatus.textContent = message;
     }
 
     function formatDisplayDate(dateValue) {
@@ -747,6 +671,42 @@ let editingKidId = null;
       });
     }
 
+    function excelDateToISO(value) {
+      if (!value) return null;
+
+      if (typeof value === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(value);
+        if (!parsed) return null;
+        const month = String(parsed.m).padStart(2, '0');
+        const day = String(parsed.d).padStart(2, '0');
+        return `${parsed.y}-${month}-${day}`;
+      }
+
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return null;
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function normalizeGender(value) {
+      const gender = String(value || '').trim().toLowerCase();
+      if (gender === 'male' || gender === 'm' || gender === 'boy') return 'Male';
+      if (gender === 'female' || gender === 'f' || gender === 'girl') return 'Female';
+      return '';
+    }
+
+    function getCellValue(row, possibleKeys = []) {
+      for (const key of possibleKeys) {
+        if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+          return String(row[key]).trim();
+        }
+      }
+      return '';
+    }
+
     function ensureKidsAttendance() {
       kidsRecords.forEach(kid => {
         const exists = kidsAttendance.find(a => a.kidId === kid.id);
@@ -763,44 +723,41 @@ let editingKidId = null;
     }
 
     function updateStats() {
-  const totalKids = kidsRecords.length;
-  const totalBoys = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'male').length;
-  const totalGirls = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'female').length;
+      const totalKids = kidsRecords.length;
+      const totalBoys = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'male').length;
+      const totalGirls = kidsRecords.filter(kid => (kid.gender || '').toLowerCase() === 'female').length;
 
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
 
-  const birthdaysThisMonth = kidsRecords.filter(kid => {
-    if (!kid.dob) return false;
-    const dob = new Date(kid.dob);
-    return !isNaN(dob.getTime()) && (dob.getMonth() + 1 === currentMonth);
-  }).length;
+      const birthdaysThisMonth = kidsRecords.filter(kid => {
+        if (!kid.dob) return false;
+        const dob = new Date(kid.dob);
+        return !isNaN(dob.getTime()) && (dob.getMonth() + 1 === currentMonth);
+      }).length;
 
-  const presentCount = kidsAttendance.filter(a => a.present).length;
+      const presentCount = kidsAttendance.filter(a => a.present).length;
 
-  document.getElementById('totalKids').textContent = totalKids;
-  document.getElementById('totalBoys').textContent = totalBoys;
-  document.getElementById('totalGirls').textContent = totalGirls;
-  document.getElementById('kidsBirthdaysMonth').textContent = birthdaysThisMonth;
+      document.getElementById('totalKids').textContent = totalKids;
+      document.getElementById('totalBoys').textContent = totalBoys;
+      document.getElementById('totalGirls').textContent = totalGirls;
+      document.getElementById('kidsBirthdaysMonth').textContent = birthdaysThisMonth;
 
-  // Attendance closed = reset dashboard counts to 0
-  if (!kidsAttendanceOpen) {
-    document.getElementById('kidsPresentToday').textContent = 0;
-    document.getElementById('kidsAbsentToday').textContent = 0;
-    return;
-  }
+      if (!kidsAttendanceOpen) {
+        document.getElementById('kidsPresentToday').textContent = 0;
+        document.getElementById('kidsAbsentToday').textContent = 0;
+        return;
+      }
 
-  // Attendance open but nobody marked yet = still 0 / 0
-  if (presentCount === 0) {
-    document.getElementById('kidsPresentToday').textContent = 0;
-    document.getElementById('kidsAbsentToday').textContent = 0;
-    return;
-  }
+      if (presentCount === 0) {
+        document.getElementById('kidsPresentToday').textContent = 0;
+        document.getElementById('kidsAbsentToday').textContent = 0;
+        return;
+      }
 
-  // Attendance open and some have marked
-  document.getElementById('kidsPresentToday').textContent = presentCount;
-  document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
-}
+      document.getElementById('kidsPresentToday').textContent = presentCount;
+      document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
+    }
 
     function getTodayBirthdays() {
       const now = new Date();
@@ -1125,65 +1082,62 @@ let editingKidId = null;
       renderAll();
     }
 
-    function saveKidsAttendanceHistory() {
-  localStorage.setItem('church_kids_attendance_history', JSON.stringify(kidsAttendanceHistory));
-}
+    function archiveKidsAttendanceSession() {
+      const today = new Date();
+      const sessionDate = today.toISOString().split('T')[0];
 
-function archiveKidsAttendanceSession() {
-  const today = new Date();
-  const sessionDate = today.toISOString().split('T')[0];
+      const alreadySaved = kidsAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
+      if (alreadySaved) return;
 
-  const alreadySaved = kidsAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
-  if (alreadySaved) return;
-
-  const snapshot = {
-    sessionDate,
-    openedAt: kidsOpenedAt || '',
-    closedAt: kidsClosedAt || new Date().toISOString(),
-    records: kidsRecords.map(kid => {
-      const record = kidsAttendance.find(a => a.kidId === kid.id);
-      return {
-        kidId: kid.id,
-        fullName: kid.name,
-        memberNumber: kid.number || '',
-        gender: kid.gender || '',
-        memberClass: kid.kidClass || '',
-        guardian: kid.guardian || '',
-        phone: kid.phone || '',
-        present: !!(record && record.present),
-        type: 'Kid'
+      const snapshot = {
+        sessionDate,
+        openedAt: kidsOpenedAt || '',
+        closedAt: kidsClosedAt || new Date().toISOString(),
+        records: kidsRecords.map(kid => {
+          const record = kidsAttendance.find(a => a.kidId === kid.id);
+          return {
+            kidId: kid.id,
+            fullName: kid.name,
+            memberNumber: kid.number || '',
+            gender: kid.gender || '',
+            memberClass: kid.kidClass || '',
+            guardian: kid.guardian || '',
+            phone: kid.phone || '',
+            present: !!(record && record.present),
+            type: 'Kid'
+          };
+        })
       };
-    })
-  };
 
-  kidsAttendanceHistory.push(snapshot);
-  saveKidsAttendanceHistory();
-}
-  document.getElementById('openKidsAttendance').onclick = () => {
-  kidsAttendanceOpen = true;
-  kidsOpenedAt = new Date().toISOString();
-  kidsClosedAt = '';
+      kidsAttendanceHistory.push(snapshot);
+      saveKidsAttendanceHistory();
+    }
 
-  localStorage.setItem('kids_attendance_open', true);
-  localStorage.setItem('kids_opened_at', kidsOpenedAt);
-  localStorage.removeItem('kids_closed_at');
+    document.getElementById('openKidsAttendance').onclick = () => {
+      kidsAttendanceOpen = true;
+      kidsOpenedAt = new Date().toISOString();
+      kidsClosedAt = '';
 
-  ensureKidsAttendance();
-  kidsAttendance.forEach(a => a.present = false);
-  saveKidsAttendance();
-  renderAll();
-};
+      localStorage.setItem('kids_attendance_open', true);
+      localStorage.setItem('kids_opened_at', kidsOpenedAt);
+      localStorage.removeItem('kids_closed_at');
 
-document.getElementById('closeKidsAttendance').onclick = () => {
-  kidsAttendanceOpen = false;
-  kidsClosedAt = new Date().toISOString();
+      ensureKidsAttendance();
+      kidsAttendance.forEach(a => a.present = false);
+      saveKidsAttendance();
+      renderAll();
+    };
 
-  localStorage.setItem('kids_attendance_open', false);
-  localStorage.setItem('kids_closed_at', kidsClosedAt);
+    document.getElementById('closeKidsAttendance').onclick = () => {
+      kidsAttendanceOpen = false;
+      kidsClosedAt = new Date().toISOString();
 
-  archiveKidsAttendanceSession();
-  renderAll();
-};
+      localStorage.setItem('kids_attendance_open', false);
+      localStorage.setItem('kids_closed_at', kidsClosedAt);
+
+      archiveKidsAttendanceSession();
+      renderAll();
+    };
 
     document.getElementById('markAllKids').onclick = () => {
       if (!kidsAttendanceOpen) {
@@ -1197,7 +1151,6 @@ document.getElementById('closeKidsAttendance').onclick = () => {
       renderAll();
     };
 
-    
     function buildKidsReport() {
       const present = kidsAttendance.filter(a => a.present).length;
       const total = kidsRecords.length;
@@ -1307,19 +1260,138 @@ document.getElementById('closeKidsAttendance').onclick = () => {
       window.print();
     };
 
-    renderAll();
-
     let searchTimer;
+    kidsSearchInput.addEventListener('input', () => {
+      renderSearchResults();
 
-kidsSearchInput.addEventListener('input', () => {
-  renderSearchResults();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        document.getElementById('kidsSearchResults').innerHTML =
+          '<p class="empty-state">Search cleared.</p>';
+      }, 30000);
+    });
 
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    document.getElementById('kidsSearchResults').innerHTML =
-      '<p class="empty-state">Search cleared.</p>';
-  }, 30000); // 30 seconds
-});
+    // =========================
+    // BULK EXCEL IMPORT SECTION
+    // =========================
+
+    document.getElementById('downloadKidsTemplate').addEventListener('click', () => {
+      const templateData = [
+        {
+          'Full Name': 'Ama Boateng',
+          'Registered Number': 'K001',
+          'Gender': 'Female',
+          'Class / Group': 'Children Class A',
+          'Date of Birth': '2017-05-14',
+          'Parent / Guardian Name': 'Mrs Boateng',
+          'Parent / Guardian Phone': '0240000000',
+          'Address': 'Accra',
+          'Medical / Special Note': 'None'
+        }
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Kids Template');
+      XLSX.writeFile(wb, 'kids_bulk_registration_template.xlsx');
+    });
+
+    document.getElementById('importKidsExcel').addEventListener('click', () => {
+      const fileInput = document.getElementById('bulkExcelFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showImportStatus('Please select an Excel or CSV file first.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+          if (!rows.length) {
+            showImportStatus('The selected file is empty.', 'error');
+            return;
+          }
+
+          let importedCount = 0;
+          let skippedCount = 0;
+
+          rows.forEach(row => {
+            const name = getCellValue(row, ['Full Name', 'Name', 'FullName', 'full name', 'name']);
+            const number = getCellValue(row, ['Registered Number', 'Number', 'Reg Number', 'ID', 'registered number']);
+            const rawGender = getCellValue(row, ['Gender', 'gender']);
+            const kidClass = getCellValue(row, ['Class / Group', 'Class', 'Group', 'class / group']);
+            const dobRaw = getCellValue(row, ['Date of Birth', 'DOB', 'Birth Date', 'date of birth']);
+            const guardian = getCellValue(row, ['Parent / Guardian Name', 'Guardian', 'Parent Name', 'guardian']);
+            const phone = getCellValue(row, ['Parent / Guardian Phone', 'Phone', 'Guardian Phone', 'parent / guardian phone']);
+            const address = getCellValue(row, ['Address', 'address']);
+            const note = getCellValue(row, ['Medical / Special Note', 'Note', 'Medical Note', 'medical / special note']);
+
+            if (!name) {
+              skippedCount++;
+              return;
+            }
+
+            const gender = normalizeGender(rawGender);
+            const dob = excelDateToISO(dobRaw);
+
+            const duplicate = kidsRecords.find(kid =>
+              (number && kid.number && kid.number.toLowerCase() === number.toLowerCase()) ||
+              ((kid.name || '').toLowerCase() === name.toLowerCase() && (kid.guardian || '').toLowerCase() === guardian.toLowerCase())
+            );
+
+            if (duplicate) {
+              skippedCount++;
+              return;
+            }
+
+            kidsRecords.push({
+              id: Date.now() + Math.floor(Math.random() * 100000),
+              name,
+              number,
+              gender,
+              kidClass,
+              dob,
+              guardian,
+              phone,
+              address,
+              note,
+              fileURL: '',
+              fileName: ''
+            });
+
+            importedCount++;
+          });
+
+          saveKidsRecords();
+          ensureKidsAttendance();
+          renderAll();
+
+          if (importedCount > 0) {
+            showImportStatus(`${importedCount} kid record(s) imported successfully. ${skippedCount} row(s) skipped because of missing name or duplicate records.`, 'success');
+          } else {
+            showImportStatus(`No new records were imported. ${skippedCount} row(s) were skipped.`, 'error');
+          }
+
+          fileInput.value = '';
+        } catch (error) {
+          showImportStatus('Import failed. Please check the Excel file format and try again.', 'error');
+          console.error(error);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    renderAll();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
