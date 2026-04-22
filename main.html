@@ -710,6 +710,7 @@ td, th {
   <button class="btn btn-light" id="switchKidsView">Kids View</button>
   <button class="btn btn-light" id="switchTrendView">Trend View</button>
   <button class="btn btn-light" id="switchVisitorsView">Visitors View</button>
+  <button class="btn btn-light" id="switchRecycleBinView">Recycle Bin</button>
 
   <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
 
@@ -1848,18 +1849,35 @@ td, th {
       `).join('');
     }
 
-   window.deleteRecord = function(id) {
-  const confirmDelete = confirm("Are you sure you want to delete this record?");
+  let recycleBin = JSON.parse(localStorage.getItem('church_recycle_bin') || '[]');
 
-  if (!confirmDelete) {
-    return; // stop if user cancels
-  }
+function saveRecycleBin() {
+  localStorage.setItem('church_recycle_bin', JSON.stringify(recycleBin));
+}
+
+function moveToRecycleBin(type, data) {
+  recycleBin.unshift({
+    binId: Date.now() + Math.floor(Math.random() * 1000),
+    type,
+    deletedAt: new Date().toISOString(),
+    data
+  });
+  saveRecycleBin();
+}
+
+window.deleteRecord = function(id) {
+  const record = records.find(record => record.id === id);
+  if (!record) return;
+
+  if (!confirm(`Are you sure you want to delete record "${record.title}"?`)) return;
+
+  moveToRecycleBin('record', record);
 
   records = records.filter(record => record.id !== id);
   saveRecords();
   renderRecords();
 
-  alert("Record deleted successfully.");
+  alert('Record moved to recycle bin successfully.');
 }
 
     function renderBirthdays() {
@@ -2375,6 +2393,10 @@ if(window.location.search.includes("refresh=1")){
   let members = JSON.parse(localStorage.getItem('church_members') || '[]');
   localStorage.setItem('church_members', JSON.stringify(members));
 }
+
+document.getElementById('switchRecycleBinView').addEventListener('click', () => {
+  window.location.href = 'recycle-bin.html';
+});
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
