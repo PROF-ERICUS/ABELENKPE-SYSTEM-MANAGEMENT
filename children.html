@@ -351,12 +351,6 @@
       border-top: 1px dashed var(--border);
     }
 
-    .import-help {
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
     .import-status {
       margin-top: 12px;
       padding: 12px 14px;
@@ -455,15 +449,15 @@
       </div>
       <div class="card stat-card">
         <h3>Present Today</h3>
-        <div class="value" id="ChildrenPresentToday">0</div>
+        <div class="value" id="kidsPresentToday">0</div>
       </div>
       <div class="card stat-card">
         <h3>Absentees</h3>
-        <div class="value" id="ChildrenAbsentToday">0</div>
+        <div class="value" id="kidsAbsentToday">0</div>
       </div>
       <div class="card stat-card">
         <h3>Birthdays This Month</h3>
-        <div class="value" id="ChildrenBirthdaysMonth">0</div>
+        <div class="value" id="kidsBirthdaysMonth">0</div>
       </div>
     </section>
 
@@ -533,7 +527,6 @@
 
         <div class="import-box">
           <div class="section-title">Bulk Excel Registration</div>
-         
 
           <div class="field">
             <label>Select Excel / CSV File</label>
@@ -589,18 +582,17 @@
 
     <section class="card" style="margin-bottom:24px;">
       <div class="section-title">Children Attendance</div>
-      <div id="kidsAttendanceTable" class="empty-state">No Children available.</div>
+      <div id="kidsAttendanceTable" class="empty-state">No children available.</div>
     </section>
 
     <section class="card">
       <div class="section-title">Stored Children Records</div>
-      <div id="kidsRecordsList" class="empty-state">No Children records saved yet.</div>
+      <div id="kidsRecordsList" class="empty-state">No children records saved yet.</div>
     </section>
 
     <div id="kidsPrintArea" class="report-print"></div>
   </main>
 
-  <!-- SheetJS for Excel import/export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <script>
@@ -734,6 +726,7 @@
       }).length;
 
       const presentCount = kidsAttendance.filter(a => a.present).length;
+      const absentCount = Math.max(totalKids - presentCount, 0);
 
       document.getElementById('totalKids').textContent = totalKids;
       document.getElementById('totalBoys').textContent = totalBoys;
@@ -746,14 +739,8 @@
         return;
       }
 
-      if (presentCount === 0) {
-        document.getElementById('kidsPresentToday').textContent = 0;
-        document.getElementById('kidsAbsentToday').textContent = 0;
-        return;
-      }
-
       document.getElementById('kidsPresentToday').textContent = presentCount;
-      document.getElementById('kidsAbsentToday').textContent = Math.max(totalKids - presentCount, 0);
+      document.getElementById('kidsAbsentToday').textContent = absentCount;
     }
 
     function getTodayBirthdays() {
@@ -840,7 +827,7 @@
       const wrap = document.getElementById('kidsRecordsList');
 
       if (!kidsRecords.length) {
-        wrap.innerHTML = '<p class="empty-state">No kids records saved yet.</p>';
+        wrap.innerHTML = '<p class="empty-state">No children records saved yet.</p>';
         return;
       }
 
@@ -886,7 +873,7 @@
       );
 
       if (!filtered.length) {
-        wrap.innerHTML = '<p class="empty-state">No matching kid record found.</p>';
+        wrap.innerHTML = '<p class="empty-state">No matching child record found.</p>';
         return;
       }
 
@@ -917,14 +904,14 @@
       const wrap = document.getElementById('kidsAttendanceTable');
 
       if (!kidsRecords.length) {
-        wrap.innerHTML = '<p class="empty-state">No kids available.</p>';
+        wrap.innerHTML = '<p class="empty-state">No children available.</p>';
         return;
       }
 
       wrap.innerHTML = kidsRecords.map(kid => {
         const record = kidsAttendance.find(a => a.kidId === kid.id);
         const guardianPhone = (kid.phone || '').replace(/[^0-9]/g, '');
-        const absentMessage = `Hello, ${kid.name} was absent from today's kids attendance. Please let us know how the child is doing. God bless you.`;
+        const absentMessage = `Hello, ${kid.name} was absent from today's children attendance. Please let us know how the child is doing. God bless you.`;
         const absentWhatsapp = guardianPhone ? `https://wa.me/${guardianPhone}?text=${encodeURIComponent(absentMessage)}` : '';
 
         return `
@@ -953,8 +940,8 @@
 
     function resetFormState() {
       editingKidId = null;
-      document.getElementById('kidsFormTitle').textContent = 'Register Kid';
-      document.getElementById('saveKidBtn').textContent = 'Save Kid Record';
+      document.getElementById('kidsFormTitle').textContent = 'Register Child';
+      document.getElementById('saveKidBtn').textContent = 'Save Child Record';
       cancelEditBtn.style.display = 'none';
       kidsForm.reset();
     }
@@ -1029,6 +1016,7 @@
       }
 
       saveKidsRecords();
+      ensureKidsAttendance();
       resetFormState();
       renderAll();
     });
@@ -1037,7 +1025,7 @@
     kidsSearchInput.addEventListener('input', renderSearchResults);
 
     window.deleteKidRecord = function(id) {
-      if (!confirm('Delete this kid record?')) return;
+      if (!confirm('Delete this child record?')) return;
       kidsRecords = kidsRecords.filter(record => record.id !== id);
       kidsAttendance = kidsAttendance.filter(record => record.kidId !== id);
       saveKidsRecords();
@@ -1060,8 +1048,8 @@
       document.getElementById('kidNote').value = record.note || '';
 
       editingKidId = id;
-      document.getElementById('kidsFormTitle').textContent = 'Edit Kid Record';
-      document.getElementById('saveKidBtn').textContent = 'Update Kid Record';
+      document.getElementById('kidsFormTitle').textContent = 'Edit Child Record';
+      document.getElementById('saveKidBtn').textContent = 'Update Child Record';
       cancelEditBtn.style.display = 'inline-block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1073,7 +1061,9 @@
       }
 
       const record = kidsAttendance.find(a => a.kidId === id);
-      if (record) record.present = !record.present;
+      if (record) {
+        record.present = !record.present;
+      }
 
       saveKidsAttendance();
       renderAll();
@@ -1083,8 +1073,7 @@
       const today = new Date();
       const sessionDate = today.toISOString().split('T')[0];
 
-      const alreadySaved = kidsAttendanceHistory.some(entry => entry.sessionDate === sessionDate);
-      if (alreadySaved) return;
+      const existingIndex = kidsAttendanceHistory.findIndex(entry => entry.sessionDate === sessionDate);
 
       const snapshot = {
         sessionDate,
@@ -1101,12 +1090,17 @@
             guardian: kid.guardian || '',
             phone: kid.phone || '',
             present: !!(record && record.present),
-            type: 'Kid'
+            type: 'Child'
           };
         })
       };
 
-      kidsAttendanceHistory.push(snapshot);
+      if (existingIndex >= 0) {
+        kidsAttendanceHistory[existingIndex] = snapshot;
+      } else {
+        kidsAttendanceHistory.push(snapshot);
+      }
+
       saveKidsAttendanceHistory();
     }
 
@@ -1115,7 +1109,7 @@
       kidsOpenedAt = new Date().toISOString();
       kidsClosedAt = '';
 
-      localStorage.setItem('kids_attendance_open', true);
+      localStorage.setItem('kids_attendance_open', JSON.stringify(true));
       localStorage.setItem('kids_opened_at', kidsOpenedAt);
       localStorage.removeItem('kids_closed_at');
 
@@ -1129,10 +1123,11 @@
       kidsAttendanceOpen = false;
       kidsClosedAt = new Date().toISOString();
 
-      localStorage.setItem('kids_attendance_open', false);
+      localStorage.setItem('kids_attendance_open', JSON.stringify(false));
       localStorage.setItem('kids_closed_at', kidsClosedAt);
 
       archiveKidsAttendanceSession();
+      saveKidsAttendanceHistory();
       renderAll();
     };
 
@@ -1172,7 +1167,7 @@
               </tr>
             `;
           }).join('')
-        : `<tr><td colspan="8" style="text-align:center;">No Children records available.</td></tr>`;
+        : `<tr><td colspan="8" style="text-align:center;">No children records available.</td></tr>`;
 
       const logoMarkup = CHURCH_LOGO
         ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="report-logo">`
@@ -1183,7 +1178,7 @@
           ${logoMarkup}
           <div class="report-title-wrap">
             <h2>${CHURCH_NAME}</h2>
-            <p><strong>Official Kids Attendance Report</strong></p>
+            <p><strong>Official Children Attendance Report</strong></p>
             <p>Date: ${formatDisplayDate(new Date().toISOString())}</p>
           </div>
         </div>
@@ -1263,14 +1258,12 @@
 
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
-        document.getElementById('kidsSearchResults').innerHTML =
-          '<p class="empty-state">Search cleared.</p>';
+        if (!kidsSearchInput.value.trim()) {
+          document.getElementById('kidsSearchResults').innerHTML =
+            '<p class="empty-state">Search results will appear here.</p>';
+        }
       }, 30000);
     });
-
-    // =========================
-    // BULK EXCEL IMPORT SECTION
-    // =========================
 
     document.getElementById('downloadKidsTemplate').addEventListener('click', () => {
       const templateData = [
@@ -1372,7 +1365,7 @@
           renderAll();
 
           if (importedCount > 0) {
-            showImportStatus(`${importedCount} kid record(s) imported successfully. ${skippedCount} row(s) skipped because of missing name or duplicate records.`, 'success');
+            showImportStatus(`${importedCount} child record(s) imported successfully. ${skippedCount} row(s) skipped because of missing name or duplicate records.`, 'success');
           } else {
             showImportStatus(`No new records were imported. ${skippedCount} row(s) were skipped.`, 'error');
           }
@@ -1389,6 +1382,5 @@
 
     renderAll();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
