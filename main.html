@@ -707,7 +707,7 @@ td, th {
 
   <button class="btn btn-light" id="switchAdminView">Admin Login</button>
   <button class="btn btn-light" id="switchMemberView">Member View</button>
-  <button class="btn btn-light" id="switchKidsView">Kids View</button>
+  <button class="btn btn-light" id="switchChildrenView">Children View</button>
   <button class="btn btn-light" id="switchTrendView">Trend View</button>
   <button class="btn btn-light" id="switchVisitorsView">Visitors View</button>
   <button class="btn btn-light" id="switchRecycleBinView">Recycle Bin</button>
@@ -1168,9 +1168,9 @@ td, th {
       updateViewMode();
     });
 
-    document.getElementById('switchKidsView').addEventListener('click', () => {
-      window.location.href = 'kids.html';
-    });
+   document.getElementById('switchChildrenView').addEventListener('click', () => {
+  window.location.href = 'children.html';
+});
 
     document.getElementById('switchTrendView').addEventListener('click', () => {
       window.location.href = 'trend.html';
