@@ -709,6 +709,7 @@ td, th {
   <button class="btn btn-light" id="switchMemberView">Member View</button>
   <button class="btn btn-light" id="switchKidsView">Kids View</button>
   <button class="btn btn-light" id="switchTrendView">Trend View</button>
+  <button class="btn btn-light" id="switchVisitorsView">Visitors View</button>
 
   <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
 
@@ -2341,6 +2342,30 @@ Invalid rows: ${invalidCount}`);
   setTimeout(() => {
     window.location.href = "index.html";
   }, 200);
+}
+const prefill = JSON.parse(localStorage.getItem('prefill_member') || 'null');
+
+if (prefill) {
+  document.getElementById('fullName').value = prefill.fullName || '';
+  document.getElementById('memberNumber').value = prefill.phone || '';
+  document.getElementById('phone').value = prefill.phone || '';
+  document.getElementById('gender').value = prefill.gender || '';
+  document.getElementById('memberClass').value = prefill.memberClass || '';
+  document.getElementById('dob').value = prefill.dob || '';
+  document.getElementById('note').value = prefill.note || 'Converted from visitor record';
+
+  localStorage.removeItem('prefill_member');
+  goToSection('member-registration');
+}
+
+document.getElementById('switchVisitorsView').addEventListener('click', () => {
+  window.location.href = 'visitors.html';
+});
+
+// Force reload members when coming from visitors
+if(window.location.search.includes("refresh=1")){
+  let members = JSON.parse(localStorage.getItem('church_members') || '[]');
+  localStorage.setItem('church_members', JSON.stringify(members));
 }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
