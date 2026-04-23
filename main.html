@@ -795,8 +795,8 @@ td, th {
                 <input type="text" id="fullName" required />
               </div>
               <div class="field">
-                <label>Registered Number</label>
-                <input type="text" id="memberNumber" required />
+                <label>Church Serial Number</label>
+                <input type="text" id="memberNumber" placeholder="Auto-generated e.g. SDA001" readonly />
               </div>
               <div class="field">
                 <label>Gender</label>
@@ -816,7 +816,7 @@ td, th {
               </div>
               <div class="field">
                 <label>Phone Number</label>
-                <input type="text" id="phone" placeholder="Registered number must be same as phone number" required />
+                <input type="text" id="phone" placeholder="Enter phone number for WhatsApp and calls" required />
               </div>
               <div class="field">
                 <label>Note</label>
@@ -839,7 +839,7 @@ td, th {
                 <button class="btn btn-light" id="downloadTemplateBtn" type="button">Download Template</button>
               </div>
               <p class="muted" style="margin-top:10px;">
-  Upload Excel or CSV using this format: fullName, memberNumber, gender, memberClass, dob, phone, note
+  Upload Excel or CSV using this format: fullName, gender, memberClass, dob, phone, note
 </p>
             </div>
           </div>
@@ -882,8 +882,8 @@ td, th {
                 <input type="text" id="selfFullName" required />
               </div>
               <div class="field">
-                <label>Registered Number</label>
-                <input type="text" id="selfMemberNumber" required />
+                <label>Church Serial Number</label>
+                <input type="text" id="selfMemberNumber" placeholder="Auto-generated after registration" readonly />
               </div>
               <div class="field">
                 <label>Gender</label>
@@ -903,7 +903,7 @@ td, th {
               </div>
               <div class="field">
                 <label>Phone Number</label>
-                <input type="text" id="selfPhone" placeholder="Registered number must be same as phone number" required />
+                <input type="text" id="selfPhone" placeholder="Enter phone number for WhatsApp and calls" required />
               </div>
               <div class="field">
                 <label>Note</label>
@@ -916,7 +916,7 @@ td, th {
           </div>
           <div class="card">
             <div class="section-title">Registration Note</div>
-            <p class="muted">Use the same registered number later for member search and attendance.</p>
+            <p class="muted">After registration, the system will assign a church serial number for attendance. Search members by name or phone number.</p>
           </div>
         </div>
       </section>
@@ -924,8 +924,8 @@ td, th {
       <section class="section" id="member-search">
         <div class="card">
           <div class="toolbar">
-            <div class="section-title">Search Members by Name or Registered Number</div>
-            <input type="text" id="searchInput" class="search-input" placeholder="Type full name or registered number..." />
+            <div class="section-title">Search Members by Name or Phone Number</div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by name or phone number..." />
           </div>
           <div class="table-wrap" id="searchTableWrap">
             <table>
@@ -955,8 +955,8 @@ td, th {
           <div class="grid-2">
             <div>
               <div class="field">
-                <label>Enter Registered Number</label>
-                <input type="text" id="memberAttendanceNumber" placeholder="Enter your registered number" />
+                <label>Enter Church Serial Number</label>
+                <input type="text" id="memberAttendanceNumber" placeholder="Enter your church serial number (e.g. SDA001)" />
               </div>
               <div class="btn-row" style="margin-top:12px;">
                 <button class="btn btn-success" id="memberMarkAttendanceBtn">Mark My Attendance</button>
@@ -964,7 +964,7 @@ td, th {
             </div>
             <div>
               <div class="section-title" style="font-size:0.95rem;">Member Result</div>
-              <div id="memberAttendanceResult" class="muted">Enter your registered number to mark attendance.</div>
+              <div id="memberAttendanceResult" class="muted">Enter your church serial number to mark attendance.</div>
             </div>
           </div>
         </div>
@@ -1215,9 +1215,25 @@ td, th {
       localStorage.setItem('church_records', JSON.stringify(records));
     }
 
+    function getNextChurchSerial() {
+      const serialNumbers = members
+        .map(member => String(member.memberNumber || '').trim().toUpperCase())
+        .map(number => {
+          const match = number.match(/^SDA(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        });
+
+      const highest = serialNumbers.length ? Math.max(...serialNumbers) : 0;
+      return `SDA${String(highest + 1).padStart(3, '0')}`;
+    }
+
+    function isChurchSerial(value) {
+      return /^SDA\d+$/i.test(String(value || '').trim());
+    }
+
     function normalizeMemberRow(member) {
       return {
-        id: member.id || Date.now(),
+        id: member.id || Date.now() + Math.floor(Math.random() * 1000),
         fullName: member.fullName || '',
         memberNumber: member.memberNumber || '',
         gender: member.gender || '',
@@ -1229,6 +1245,14 @@ td, th {
     }
 
     members = members.map(normalizeMemberRow);
+
+    members.forEach(member => {
+      const currentNumber = String(member.memberNumber || '').trim();
+      if (!isChurchSerial(currentNumber)) {
+        member.memberNumber = getNextChurchSerial();
+      }
+    });
+
     saveMembers();
 
     const memberForm = document.getElementById('memberForm');
@@ -1262,31 +1286,24 @@ td, th {
       e.preventDefault();
 
       const fullName = document.getElementById('fullName').value.trim();
-      const memberNumberInput = document.getElementById('memberNumber').value.trim();
       const gender = document.getElementById('gender').value;
       const memberClass = document.getElementById('memberClass').value.trim();
       const dob = document.getElementById('dob').value || null;
       const phone = document.getElementById('phone').value.trim();
       const note = document.getElementById('note').value.trim();
-      const memberNumber = phone || memberNumberInput;
 
-      if (!fullName || !memberNumber || !gender || !memberClass || !phone) {
+      if (!fullName || !gender || !memberClass || !phone) {
         alert('Please fill all required fields.');
         return;
       }
 
-      if (memberNumber !== phone) {
-        alert('Registered number must be the same as phone number.');
-        return;
-      }
-
-      const existing = members.find(m =>
-        (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase() &&
+      const existingPhone = members.find(m =>
+        String(m.phone || '').toLowerCase() === phone.toLowerCase() &&
         m.id !== editingMemberId
       );
 
-      if (existing) {
-        alert('Registered number already exists.');
+      if (existingPhone) {
+        alert('Phone number already exists.');
         return;
       }
 
@@ -1297,14 +1314,13 @@ td, th {
           alert('Member being edited was not found.');
           resetMemberEditState();
           renderAll();
-    updateMemberEditUI();
+          updateMemberEditUI();
           return;
         }
 
         members[memberIndex] = {
           ...members[memberIndex],
           fullName,
-          memberNumber,
           gender,
           memberClass,
           dob,
@@ -1314,6 +1330,8 @@ td, th {
 
         alert('Member updated successfully.');
       } else {
+        const memberNumber = getNextChurchSerial();
+
         members.push({
           id: Date.now(),
           fullName,
@@ -1325,7 +1343,7 @@ td, th {
           note
         });
 
-        alert('Member saved successfully.');
+        alert(`Member saved successfully. Church serial number: ${memberNumber}`);
       }
 
       saveMembers();
@@ -1342,29 +1360,24 @@ td, th {
       }
 
       const fullName = document.getElementById('selfFullName').value.trim();
-      const memberNumberInput = document.getElementById('selfMemberNumber').value.trim();
       const gender = document.getElementById('selfGender').value;
       const memberClass = document.getElementById('selfMemberClass').value.trim();
       const dob = document.getElementById('selfDob').value || null;
       const phone = document.getElementById('selfPhone').value.trim();
       const note = document.getElementById('selfNote').value.trim();
-      const memberNumber = phone || memberNumberInput;
 
-      if (!fullName || !memberNumber || !gender || !memberClass || !phone) {
+      if (!fullName || !gender || !memberClass || !phone) {
         alert('Please fill all required fields.');
         return;
       }
 
-      if (memberNumber !== phone) {
-        alert('Registered number must be the same as phone number.');
+      const existingPhone = members.find(m => String(m.phone || '').toLowerCase() === phone.toLowerCase());
+      if (existingPhone) {
+        alert('Phone number already exists.');
         return;
       }
 
-      const existing = members.find(m => (m.memberNumber || '').toLowerCase() === memberNumber.toLowerCase());
-      if (existing) {
-        alert('Registered number already exists.');
-        return;
-      }
+      const memberNumber = getNextChurchSerial();
 
       members.push({
         id: Date.now(),
@@ -1379,8 +1392,10 @@ td, th {
 
       saveMembers();
       memberSelfRegisterForm.reset();
+      const selfMemberNumberField = document.getElementById('selfMemberNumber');
+      if (selfMemberNumberField) selfMemberNumberField.value = '';
       renderAll();
-      alert('Member registration successful.');
+      alert(`Member registration successful. Your church serial number is ${memberNumber}.`);
       goToSection('member-search');
     });
 
@@ -1443,7 +1458,8 @@ td, th {
       editingMemberId = id;
 
       document.getElementById('fullName').value = member.fullName;
-      document.getElementById('memberNumber').value = member.memberNumber;
+      const memberNumberField = document.getElementById('memberNumber');
+      if (memberNumberField) memberNumberField.value = member.memberNumber;
       document.getElementById('gender').value = member.gender;
       document.getElementById('memberClass').value = member.memberClass;
       document.getElementById('dob').value = member.dob || '';
@@ -1456,6 +1472,7 @@ td, th {
 
     function renderSearchResults() {
       const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      const cleanQuery = query.replace(/\s+/g, '');
       const tbody = document.getElementById('searchResults');
       const searchTableWrap = document.getElementById('searchTableWrap');
 
@@ -1467,11 +1484,11 @@ td, th {
 
       searchTableWrap.classList.remove('hidden');
 
-      const matchedMembers = members.filter(member =>
-        (member.memberNumber || '').toLowerCase().includes(query) ||
-        (member.fullName || '').toLowerCase().includes(query) ||
-        (member.phone || '').toLowerCase().includes(query)
-      );
+      const matchedMembers = members.filter(member => {
+        const name = String(member.fullName || '').toLowerCase();
+        const phone = String(member.phone || '').toLowerCase().replace(/\s+/g, '');
+        return name.includes(query) || phone.includes(cleanQuery);
+      });
 
       const matchedKids = kidsRecords.filter(kid =>
         (kid.number || '').toLowerCase().includes(query) ||
@@ -1829,13 +1846,13 @@ td, th {
       }
 
       if (!number) {
-        result.innerHTML = '<span class="muted">Please enter your registered number.</span>';
+        result.innerHTML = '<span class="muted">Please enter your church serial number.</span>';
         return;
       }
 
       const member = members.find(m => (m.memberNumber || '').toLowerCase() === number);
       if (!member) {
-        result.innerHTML = '<span class="muted">Member number not found.</span>';
+        result.innerHTML = '<span class="muted">Church serial number not found.</span>';
         return;
       }
 
@@ -2271,9 +2288,9 @@ window.deleteRecord = function(id) {
     }
 
    document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
-  const csvContent = `fullName,memberNumber,gender,memberClass,dob,phone,note
-John Doe,0241234567,Male,Adult,1995-05-10,0241234567,Regular member
-Jane Smith,0559876543,Female,Youth,,0559876543,Choir member`;
+  const csvContent = `fullName,gender,memberClass,dob,phone,note
+John Doe,Male,Adult,1995-05-10,0241234567,Regular member
+Jane Smith,Female,Youth,,0559876543,Choir member`;
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -2299,12 +2316,11 @@ document.getElementById('uploadBulkBtn').addEventListener('click', () => {
     return;
   }
 
-  const requiredHeaders = ["fullName", "memberNumber", "gender", "memberClass", "dob", "phone", "note"];
+  const requiredHeaders = ["fullName", "gender", "memberClass", "dob", "phone", "note"];
 
   function normalizeRow(row) {
     return {
       fullName: String(row.fullName ?? '').trim(),
-      memberNumber: String(row.memberNumber ?? '').trim(),
       gender: String(row.gender ?? '').trim(),
       memberClass: String(row.memberClass ?? '').trim(),
       dob: String(row.dob ?? '').trim(),
@@ -2314,17 +2330,15 @@ document.getElementById('uploadBulkBtn').addEventListener('click', () => {
   }
 
   function excelDateToJSDate(serial) {
-  if (!serial) return null;
+    if (!serial) return null;
+    if (isNaN(serial)) return serial;
 
-  // If already normal date string, return it
-  if (isNaN(serial)) return serial;
+    const utc_days = Math.floor(serial - 25569);
+    const utc_value = utc_days * 86400;
+    const date_info = new Date(utc_value * 1000);
 
-  const utc_days = Math.floor(serial - 25569);
-  const utc_value = utc_days * 86400;
-  const date_info = new Date(utc_value * 1000);
-
-  return date_info.toISOString().split('T')[0]; // YYYY-MM-DD
-}
+    return date_info.toISOString().split('T')[0];
+  }
 
   function processRows(rawRows) {
     if (!rawRows || !rawRows.length) {
@@ -2347,18 +2361,13 @@ document.getElementById('uploadBulkBtn').addEventListener('click', () => {
     rawRows.forEach((row, index) => {
       const data = normalizeRow(row);
 
-      if (!data.fullName || !data.memberNumber || !data.gender || !data.memberClass || !data.phone) {
-        invalidCount++;
-        return;
-      }
-
-      if (data.memberNumber !== data.phone) {
+      if (!data.fullName || !data.gender || !data.memberClass || !data.phone) {
         invalidCount++;
         return;
       }
 
       const exists = members.find(m =>
-        String(m.memberNumber || '').toLowerCase() === data.memberNumber.toLowerCase()
+        String(m.phone || '').toLowerCase() === data.phone.toLowerCase()
       );
 
       if (exists) {
@@ -2369,7 +2378,7 @@ document.getElementById('uploadBulkBtn').addEventListener('click', () => {
       members.push({
         id: Date.now() + index + Math.floor(Math.random() * 10000),
         fullName: data.fullName,
-        memberNumber: data.memberNumber,
+        memberNumber: getNextChurchSerial(),
         gender: data.gender,
         memberClass: data.memberClass,
         dob: excelDateToJSDate(data.dob),
@@ -2450,7 +2459,7 @@ const prefill = JSON.parse(localStorage.getItem('prefill_member') || 'null');
 
 if (prefill) {
   document.getElementById('fullName').value = prefill.fullName || '';
-  document.getElementById('memberNumber').value = prefill.phone || '';
+  document.getElementById('memberNumber').value = 'Auto-generated on save';
   document.getElementById('phone').value = prefill.phone || '';
   document.getElementById('gender').value = prefill.gender || '';
   document.getElementById('memberClass').value = prefill.memberClass || '';
