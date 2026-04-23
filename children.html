@@ -591,38 +591,43 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <script>
-    const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
-    const CHURCH_LOGO = "sda logo.png";
+   const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
+const CHURCH_LOGO = "sda logo.png";
 
-    let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
-    let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
-    let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
-    let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
-    let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
-    let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
+let kidsAttendance = JSON.parse(localStorage.getItem('kids_attendance') || '[]');
+let kidsAttendanceOpen = JSON.parse(localStorage.getItem('kids_attendance_open') || 'false');
+let kidsOpenedAt = localStorage.getItem('kids_opened_at') || '';
+let kidsClosedAt = localStorage.getItem('kids_closed_at') || '';
+let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+let recycleBin = JSON.parse(localStorage.getItem('church_recycle_bin') || '[]');
 
-    let editingKidId = null;
+let editingKidId = null;
 
-    function getChurchMembers() {
-      return JSON.parse(localStorage.getItem('church_members') || '[]');
-    }
+function getChurchMembers() {
+  return JSON.parse(localStorage.getItem('church_members') || '[]');
+}
 
-    const kidsForm = document.getElementById('kidsForm');
-    const kidsSearchInput = document.getElementById('kidsSearchInput');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const importStatus = document.getElementById('importStatus');
+const kidsForm = document.getElementById('kidsForm');
+const kidsSearchInput = document.getElementById('kidsSearchInput');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const importStatus = document.getElementById('importStatus');
 
-    function saveKidsRecords() {
-      localStorage.setItem('church_kids_records', JSON.stringify(kidsRecords));
-    }
+function saveKidsRecords() {
+  localStorage.setItem('church_kids_records', JSON.stringify(kidsRecords));
+}
 
-    function saveKidsAttendance() {
-      localStorage.setItem('kids_attendance', JSON.stringify(kidsAttendance));
-    }
+function saveKidsAttendance() {
+  localStorage.setItem('kids_attendance', JSON.stringify(kidsAttendance));
+}
 
-    function saveKidsAttendanceHistory() {
-      localStorage.setItem('church_kids_attendance_history', JSON.stringify(kidsAttendanceHistory));
-    }
+function saveKidsAttendanceHistory() {
+  localStorage.setItem('church_kids_attendance_history', JSON.stringify(kidsAttendanceHistory));
+}
+
+function saveRecycleBin() {
+  localStorage.setItem('church_recycle_bin', JSON.stringify(recycleBin));
+}
 
     function showImportStatus(message, type = 'success') {
       importStatus.className = 'import-status ' + type;
@@ -1180,14 +1185,29 @@
     cancelEditBtn.addEventListener('click', resetFormState);
     kidsSearchInput.addEventListener('input', renderSearchResults);
 
-    window.deleteKidRecord = function(id) {
-      if (!confirm('Delete this child record?')) return;
-      kidsRecords = kidsRecords.filter(record => record.id !== id);
-      kidsAttendance = kidsAttendance.filter(record => record.kidId !== id);
-      saveKidsRecords();
-      saveKidsAttendance();
-      renderAll();
-    }
+   window.deleteKidRecord = function(id) {
+  if (!confirm('Delete this child record?')) return;
+
+  const record = kidsRecords.find(k => k.id === id);
+  if (!record) return;
+
+  recycleBin.push({
+    binId: Date.now() + Math.floor(Math.random() * 1000),
+    type: 'kid',
+    data: record,
+    deletedAt: new Date().toISOString()
+  });
+
+  kidsRecords = kidsRecords.filter(record => record.id !== id);
+  kidsAttendance = kidsAttendance.filter(record => record.kidId !== id);
+
+  saveKidsRecords();
+  saveKidsAttendance();
+  saveRecycleBin();
+
+  renderAll();
+  alert('Child moved to recycle bin successfully.');
+};
 
     window.editKidRecord = function(id) {
       const record = kidsRecords.find(k => k.id === id);
