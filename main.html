@@ -775,6 +775,7 @@ td, th {
               <button class="btn btn-light" id="markAllPresentBtn">Mark All Present</button>
               <button class="btn btn-warning" id="openRegistrationBtn">Open Registration</button>
               <button class="btn btn-danger" id="closeRegistrationBtn">Close Registration</button>
+              <button class="btn btn-danger" id="deleteAllMembersBtn">Delete All Members</button>
             </div>
           </div>
 
@@ -2654,6 +2655,38 @@ function normalizePhoneNumber(value) {
 
   return digits;
 }
+document.getElementById('deleteAllMembersBtn').addEventListener('click', () => {
+  if (!members.length) {
+    alert('No members to delete.');
+    return;
+  }
+
+  const confirmStep1 = confirm('This will delete ALL members. Continue?');
+  if (!confirmStep1) return;
+
+  const confirmText = prompt('Type DELETE to confirm permanent deletion:');
+  if (confirmText !== 'DELETE') {
+    alert('Deletion cancelled.');
+    return;
+  }
+
+  // Move all members to recycle bin first
+  members.forEach(member => {
+    moveToRecycleBin('member', member);
+  });
+
+  // Clear members and attendance
+  members = [];
+  attendance = [];
+
+  saveMembers();
+  saveAttendance();
+  saveRecycleBin();
+
+  renderAll();
+
+  alert('All members have been moved to recycle bin.');
+});
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
