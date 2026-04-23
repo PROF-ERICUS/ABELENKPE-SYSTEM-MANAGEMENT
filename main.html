@@ -956,16 +956,31 @@ td, th {
           <div class="grid-2">
             <div>
               <div class="field">
-                <label>Enter Church Serial Number</label>
-                <input type="text" id="memberAttendanceNumber" placeholder="Enter your church serial number (e.g. SDA001)" />
+                <label>Enter Church Serial Number or Phone Number</label>
+                <input type="text" id="memberAttendanceNumber" placeholder="Enter your church serial number or phone number" />
               </div>
               <div class="btn-row" style="margin-top:12px;">
-                <button class="btn btn-success" id="memberMarkAttendanceBtn">Mark My Attendance</button>
+                <button class="btn btn-success" id="memberMarkAttendanceBtn">Find My Record</button>
               </div>
             </div>
             <div>
               <div class="section-title" style="font-size:0.95rem;">Member Result</div>
-              <div id="memberAttendanceResult" class="muted">Enter your church serial number to mark attendance.</div>
+              <div id="memberAttendanceResult" class="muted">Enter your church serial number or phone number to search.</div>
+
+              <div id="memberPreviewCard" class="member-card hidden" style="margin-top:12px;">
+                <h4 id="previewFullName">N/A</h4>
+                <p class="muted">Church Serial: <span id="previewMemberNumber">N/A</span></p>
+                <p class="muted">Phone: <span id="previewPhone">N/A</span></p>
+                <p class="muted">Gender: <span id="previewGender">N/A</span></p>
+                <p class="muted">Class: <span id="previewClass">N/A</span></p>
+                <p class="muted">DOB: <span id="previewDob">N/A</span></p>
+                <p class="muted">Status: <span id="previewStatus">Not marked</span></p>
+
+                <div class="btn-row" style="margin-top:12px;">
+                  <button class="btn btn-success" id="confirmMemberAttendanceBtn">Confirm Attendance</button>
+                  <button class="btn btn-light" id="clearMemberPreviewBtn">Clear</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1068,6 +1083,7 @@ td, th {
     let memberAttendanceHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
     let kidsRecords = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
     let editingMemberId = null;
+    let selectedAttendanceMemberId = null;
 
     function saveMemberAttendanceHistory() {
       localStorage.setItem('church_member_attendance_history', JSON.stringify(memberAttendanceHistory));
@@ -1857,32 +1873,117 @@ td, th {
       renderRegistrationState();
     });
 
-    document.getElementById('memberMarkAttendanceBtn').addEventListener('click', () => {
-      const number = document.getElementById('memberAttendanceNumber').value.trim().toLowerCase();
-      const result = document.getElementById('memberAttendanceResult');
+    function hideMemberPreview() {
+  selectedAttendanceMemberId = null;
+  document.getElementById('memberPreviewCard').classList.add('hidden');
+  document.getElementById('previewFullName').textContent = 'N/A';
+  document.getElementById('previewMemberNumber').textContent = 'N/A';
+  document.getElementById('previewPhone').textContent = 'N/A';
+  document.getElementById('previewGender').textContent = 'N/A';
+  document.getElementById('previewClass').textContent = 'N/A';
+  document.getElementById('previewDob').textContent = 'N/A';
+  document.getElementById('previewStatus').textContent = 'Not marked';
+}
 
-      if (!attendanceOpen) {
-        result.innerHTML = '<span class="muted">Attendance is closed. Please wait for admin to open it.</span>';
-        return;
-      }
+function showMemberPreview(member) {
+  const record = attendance.find(a => a.memberId === member.id);
 
-      if (!number) {
-        result.innerHTML = '<span class="muted">Please enter your church serial number.</span>';
-        return;
-      }
+  selectedAttendanceMemberId = member.id;
+  document.getElementById('memberPreviewCard').classList.remove('hidden');
+  document.getElementById('previewFullName').textContent = member.fullName || 'N/A';
+  document.getElementById('previewMemberNumber').textContent = member.memberNumber || 'N/A';
+  document.getElementById('previewPhone').textContent = member.phone || 'N/A';
+  document.getElementById('previewGender').textContent = member.gender || 'N/A';
+  document.getElementById('previewClass').textContent = member.memberClass || 'N/A';
+  document.getElementById('previewDob').textContent = member.dob || 'N/A';
+  document.getElementById('previewStatus').textContent = record && record.present ? 'Already marked present' : 'Ready to mark';
+}
 
-      const member = members.find(m => (m.memberNumber || '').toLowerCase() === number);
-      if (!member) {
-        result.innerHTML = '<span class="muted">Church serial number not found.</span>';
-        return;
-      }
+document.getElementById('memberMarkAttendanceBtn').addEventListener('click', () => {
+  const inputValue = document.getElementById('memberAttendanceNumber').value.trim();
+  const searchValue = inputValue.toLowerCase();
+  const normalizedInputPhone = normalizePhoneNumber(inputValue);
+  const result = document.getElementById('memberAttendanceResult');
 
-      const record = attendance.find(a => a.memberId === member.id);
-      if (record) record.present = true;
-      saveAttendance();
-      result.innerHTML = `<strong>${member.fullName}</strong> has been marked present successfully.`;
-      renderAll();
+  hideMemberPreview();
+
+  if (!attendanceOpen) {
+    result.innerHTML = '<span class="muted">Attendance is closed. Please wait for admin to open it.</span>';
+    return;
+  }
+
+  if (!inputValue) {
+    result.innerHTML = '<span class="muted">Please enter your church serial number or phone number.</span>';
+    return;
+  }
+
+  const member = members.find(m => {
+    const memberSerial = String(m.memberNumber || '').trim().toLowerCase();
+    const memberPhone = normalizePhoneNumber(m.phone || '');
+
+    return memberSerial === searchValue || memberPhone === normalizedInputPhone;
+  });
+
+  if (!member) {
+    result.innerHTML = '<span class="muted">Church serial number or phone number not found.</span>';
+    return;
+  }
+
+  result.innerHTML = '<span class="muted">Member found. Please confirm attendance below.</span>';
+  showMemberPreview(member);
+});
+
+document.getElementById('confirmMemberAttendanceBtn').addEventListener('click', () => {
+  const result = document.getElementById('memberAttendanceResult');
+
+  if (!attendanceOpen) {
+    result.innerHTML = '<span class="muted">Attendance is closed. Please wait for admin to open it.</span>';
+    hideMemberPreview();
+    return;
+  }
+
+  if (!selectedAttendanceMemberId) {
+    result.innerHTML = '<span class="muted">Please search for a member first.</span>';
+    return;
+  }
+
+  const member = members.find(m => m.id === selectedAttendanceMemberId);
+  if (!member) {
+    result.innerHTML = '<span class="muted">Selected member not found.</span>';
+    hideMemberPreview();
+    return;
+  }
+
+  let record = attendance.find(a => a.memberId === member.id);
+
+  if (record) {
+    record.present = true;
+  } else {
+    attendance.push({
+      memberId: member.id,
+      present: true
     });
+  }
+
+  saveAttendance();
+  result.innerHTML = `<strong>${member.fullName}</strong> has been marked present successfully.`;
+  document.getElementById('memberAttendanceNumber').value = '';
+  showMemberPreview(member);
+  renderAll();
+});
+
+document.getElementById('clearMemberPreviewBtn').addEventListener('click', () => {
+  document.getElementById('memberAttendanceNumber').value = '';
+  document.getElementById('memberAttendanceResult').innerHTML = '<span class="muted">Enter your church serial number or phone number to search.</span>';
+  hideMemberPreview();
+});
+
+document.getElementById('memberAttendanceNumber').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('memberMarkAttendanceBtn').click();
+  }
+});
 
     function renderAbsentees() {
       const wrap = document.getElementById('absenteeList');
@@ -2542,7 +2643,22 @@ function normalizeWhatsAppNumber(phone) {
 
   return digits;
 }
+function normalizePhoneNumber(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+
+  if (digits.length === 10 && digits.startsWith('0')) {
+    digits = '233' + digits.slice(1);
+  } else if (digits.length === 9) {
+    digits = '233' + digits;
+  }
+
+  return digits;
+}
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
+
+
+
+
