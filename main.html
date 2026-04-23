@@ -1903,25 +1903,29 @@ td, th {
 
       wrap.innerHTML = absentees.map(member => {
         const phone = member.phone || 'No phone number';
-        const message = `Hello ${member.fullName},  We trust that you are doing well. We missed your presence at church and wanted to kindly check in to ensure that all is well with you. Please know that you are a valued member of our church family, and we look forward to worshipping together with you again soon.
+        const message = `Hello ${member.fullName}, We trust that you are doing well. We missed your presence at church and wanted to kindly check in to ensure that all is well with you. Please know that you are a valued member of our church family, and we look forward to worshipping together with you again soon.
 
 God bless you.
  Seventh-Day Adventist Church-Abelenkpe`;
-        
+
         const whatsappNumber = normalizeWhatsAppNumber(member.phone);
 const whatsappLink = whatsappNumber
   ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
   : '#';
         return `
-          <div class="member-card">
-            <h4>${member.fullName}</h4>
-            <p class="muted">Number: ${member.memberNumber}</p>
-            <p class="muted">Phone: ${phone}</p>
-            <p class="muted">Note: ${member.note || 'N/A'}</p>
-            <p style="margin:10px 0;">${message}</p>
-            ${member.phone ? `<a class="btn btn-success" href="${whatsappLink}" target="_blank">Send Check-up Message</a>` : '<span class="muted">No phone number to send message.</span>'}
-          </div>
-        `;
+  <div class="member-card">
+    <h4>${member.fullName}</h4>
+    <p class="muted">Number: ${member.memberNumber}</p>
+    <p class="muted">Phone: ${phone}</p>
+    <p class="muted">Note: ${member.note || 'N/A'}</p>
+
+    <p class="muted">Message ready to send via WhatsApp</p>
+
+    ${member.phone 
+      ? `<a class="btn btn-success" href="${whatsappLink}" target="_blank">Send Check-up Message</a>` 
+      : '<span class="muted">No phone number to send message.</span>'}
+  </div>
+`;
       }).join('');
     }
 
