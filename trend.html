@@ -463,7 +463,7 @@
       <div class="card stat-card">
         <h3>Total Trend Records</h3>
         <div class="value" id="totalTrendRecords">0</div>
-        <div class="stat-foot">All current live people in the selected filter</div>
+        <div class="stat-foot">Current live people with opened sessions in the filter</div>
       </div>
 
       <div class="card stat-card">
@@ -481,7 +481,7 @@
       <div class="card stat-card">
         <h3>Selected Range Sessions</h3>
         <div class="value" id="rangeSessions">0</div>
-        <div class="stat-foot">Attendance sessions considered</div>
+        <div class="stat-foot">Opened attendance sessions considered</div>
       </div>
     </section>
 
@@ -507,7 +507,7 @@
       <div class="summary-strip">
         <div class="summary-mini">
           <strong>Purpose</strong>
-          <span>Shows all current live members and children, then calculates their attendance within the selected range.</span>
+          <span>Starts only from real opened attendance sessions in the selected range. Weeks without opened attendance are ignored.</span>
         </div>
         <div class="summary-mini">
           <strong>Deleted / Restored</strong>
@@ -584,21 +584,74 @@
 
     function getDateDiffDays(dateStr) {
       const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
       const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return Infinity;
+      d.setHours(0, 0, 0, 0);
+
       const ms = today - d;
       return Math.floor(ms / (1000 * 60 * 60 * 24));
     }
 
+    function normalizeSessionDate(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toISOString().slice(0, 10);
+    }
+
+    function isRealOpenedAttendanceSession(session) {
+      if (!session || !normalizeSessionDate(session.sessionDate)) return false;
+
+      const records = Array.isArray(session.records) ? session.records : [];
+
+      return (
+        records.length > 0 ||
+        session.opened === true ||
+        session.isOpen === true ||
+        session.closed === true ||
+        session.isClosed === true ||
+        !!session.openedAt ||
+        !!session.closedAt ||
+        !!session.sessionId
+      );
+    }
+
+    function dedupeSessionsByDate(sessions) {
+      const map = new Map();
+
+      sessions.forEach(session => {
+        const dateKey = normalizeSessionDate(session.sessionDate);
+        if (!dateKey) return;
+
+        const current = map.get(dateKey);
+        const currentRecords = Array.isArray(current?.records) ? current.records.length : 0;
+        const newRecords = Array.isArray(session.records) ? session.records.length : 0;
+
+        if (!current || newRecords >= currentRecords) {
+          map.set(dateKey, session);
+        }
+      });
+
+      return Array.from(map.values()).sort(
+        (a, b) => new Date(b.sessionDate) - new Date(a.sessionDate)
+      );
+    }
+
     function getFilteredMemberSessions(days) {
-      return getMemberHistory()
-        .filter(session => getDateDiffDays(session.sessionDate) <= days)
-        .sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+      const sessions = getMemberHistory()
+        .filter(isRealOpenedAttendanceSession)
+        .filter(session => getDateDiffDays(session.sessionDate) <= days && getDateDiffDays(session.sessionDate) >= 0);
+
+      return dedupeSessionsByDate(sessions);
     }
 
     function getFilteredKidsSessions(days) {
-      return getKidsHistory()
-        .filter(session => getDateDiffDays(session.sessionDate) <= days)
-        .sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+      const sessions = getKidsHistory()
+        .filter(isRealOpenedAttendanceSession)
+        .filter(session => getDateDiffDays(session.sessionDate) <= days && getDateDiffDays(session.sessionDate) >= 0);
+
+      return dedupeSessionsByDate(sessions);
     }
 
     function getCombinedSessionCount(days, selectedType) {
@@ -607,7 +660,14 @@
 
       if (selectedType === 'member') return memberSessions.length;
       if (selectedType === 'kid') return kidSessions.length;
-      return memberSessions.length + kidSessions.length;
+
+      const uniqueDates = new Set();
+      [...memberSessions, ...kidSessions].forEach(session => {
+        const dateKey = normalizeSessionDate(session.sessionDate);
+        if (dateKey) uniqueDates.add(dateKey);
+      });
+
+      return uniqueDates.size;
     }
 
     function findMemberRecordInSession(member, session) {
@@ -771,11 +831,21 @@
 
       let records = [];
 
-      if (selectedType === 'all' || selectedType === 'member') {
+      if (selectedType === 'all') {
+        if (memberSessions.length) {
+          records.push(...liveMembers.map(member => buildMemberTrendRecord(member, memberSessions)));
+        }
+
+        if (kidSessions.length) {
+          records.push(...liveKids.map(kid => buildKidTrendRecord(kid, kidSessions)));
+        }
+      }
+
+      if (selectedType === 'member' && memberSessions.length) {
         records.push(...liveMembers.map(member => buildMemberTrendRecord(member, memberSessions)));
       }
 
-      if (selectedType === 'all' || selectedType === 'kid') {
+      if (selectedType === 'kid' && kidSessions.length) {
         records.push(...liveKids.map(kid => buildKidTrendRecord(kid, kidSessions)));
       }
 
@@ -847,6 +917,14 @@
       const trendList = document.getElementById('trendList');
       const followupList = document.getElementById('followupList');
       const followupInsight = document.getElementById('followupInsight');
+
+      if (!sessionCount) {
+        const typeText = selectedType === 'kid' ? 'children' : selectedType === 'member' ? 'members' : 'members or children';
+        trendList.innerHTML = `<div class="trend-empty">No opened attendance session found for ${typeText} in this selected range. The trend will start only after attendance is opened and saved.</div>`;
+        followupList.innerHTML = '<div class="followup-empty">No follow-up alert because no attendance session was opened.</div>';
+        followupInsight.textContent = 'Weeks without opened attendance are ignored, so nobody is counted absent for those weeks.';
+        return;
+      }
 
       if (!records.length) {
         trendList.innerHTML = '<div class="trend-empty">No current member or child found for this filter.</div>';
