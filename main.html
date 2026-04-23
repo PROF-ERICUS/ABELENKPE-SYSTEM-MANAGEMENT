@@ -1903,7 +1903,11 @@ td, th {
 
       wrap.innerHTML = absentees.map(member => {
         const phone = member.phone || 'No phone number';
-        const message = `Hello ${member.fullName}, we missed you at church attendance today. We hope you are fine. Please let us know how you are doing. God bless you.`;
+        const message = `Hello ${member.fullName},  We trust that you are doing well. We missed your presence at church and wanted to kindly check in to ensure that all is well with you. Please know that you are a valued member of our church family, and we look forward to worshipping together with you again soon.
+
+God bless you.
+ Seventh-Day Adventist Church-Abelenkpe`;
+        
         const whatsappNumber = normalizeWhatsAppNumber(member.phone);
 const whatsappLink = whatsappNumber
   ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
