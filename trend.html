@@ -540,10 +540,20 @@
   <script>
     const memberHistory = JSON.parse(localStorage.getItem('church_member_attendance_history') || '[]');
     const kidsHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
+    const liveMembers = JSON.parse(localStorage.getItem('church_members') || '[]');
+    const liveKids = JSON.parse(localStorage.getItem('church_kids_records') || '[]');
 
     const trendRange = document.getElementById('trendRange');
     const trendType = document.getElementById('trendType');
     const trendSearch = document.getElementById('trendSearch');
+
+    function normalizeText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeDigits(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
 
     function getDateDiffDays(dateStr) {
       const today = new Date();
@@ -572,6 +582,48 @@
       );
     }
 
+    function getLiveMemberMatch(record) {
+      const recordId = String(record.memberId || '').trim();
+      const recordNumber = normalizeText(record.memberNumber || record.number || '');
+      const recordName = normalizeText(record.fullName || '');
+      const recordPhone = normalizeDigits(record.phone || '');
+
+      return liveMembers.find(member => {
+        const memberId = String(member.id || '').trim();
+        const memberNumber = normalizeText(member.memberNumber || '');
+        const memberName = normalizeText(member.fullName || '');
+        const memberPhone = normalizeDigits(member.phone || '');
+
+        return (
+          (recordId && memberId && recordId === memberId) ||
+          (recordNumber && memberNumber && recordNumber === memberNumber) ||
+          (recordPhone && memberPhone && recordPhone === memberPhone) ||
+          (recordName && memberName && recordName === memberName)
+        );
+      }) || null;
+    }
+
+    function getLiveKidMatch(record) {
+      const recordId = String(record.kidId || '').trim();
+      const recordName = normalizeText(record.fullName || record.name || '');
+      const recordPhone = normalizeDigits(record.phone || '');
+      const guardianName = normalizeText(record.guardian || '');
+
+      return liveKids.find(kid => {
+        const kidId = String(kid.id || '').trim();
+        const kidName = normalizeText(kid.name || kid.fullName || '');
+        const kidPhone = normalizeDigits(kid.phone || '');
+        const kidGuardian = normalizeText(kid.guardian || '');
+
+        return (
+          (recordId && kidId && recordId === kidId) ||
+          (recordPhone && kidPhone && recordPhone === kidPhone) ||
+          (recordName && kidName && (!guardianName || guardianName === kidGuardian)) ||
+          (recordName && kidName && !guardianName)
+        );
+      }) || null;
+    }
+
     function buildTrendRecords(days, selectedType, query) {
       const sessions = getFilteredSessions(days);
       const map = {};
@@ -580,18 +632,28 @@
         if (selectedType !== 'all' && session.type !== selectedType) return;
 
         session.records.forEach(record => {
-          const id = `${session.type}-${record.memberId || record.kidId}`;
+          const liveMatch = session.type === 'member'
+            ? getLiveMemberMatch(record)
+            : getLiveKidMatch(record);
 
-          if (!map[id]) {
-            map[id] = {
-              id,
+          // deleted people should not appear
+          if (!liveMatch) return;
+
+          const stableId = session.type === 'member'
+            ? `member-${liveMatch.id || normalizeText(liveMatch.memberNumber || liveMatch.fullName || record.fullName)}`
+            : `kid-${liveMatch.id || normalizeText(liveMatch.name || record.fullName)}-${normalizeDigits(liveMatch.phone || '')}`;
+
+          if (!map[stableId]) {
+            map[stableId] = {
+              id: stableId,
+              sourceId: liveMatch.id || '',
               type: session.type === 'member' ? 'Member' : 'Kid',
-              fullName: record.fullName,
-              memberNumber: record.memberNumber || record.number || '',
-              gender: record.gender || '',
-              memberClass: record.memberClass || record.kidClass || '',
-              guardian: record.guardian || '',
-              phone: record.phone || '',
+              fullName: liveMatch.fullName || liveMatch.name || record.fullName || '',
+              memberNumber: liveMatch.memberNumber || liveMatch.linkedMemberNumber || record.memberNumber || record.number || '',
+              gender: liveMatch.gender || record.gender || '',
+              memberClass: liveMatch.memberClass || liveMatch.kidClass || record.memberClass || record.kidClass || '',
+              guardian: liveMatch.guardian || record.guardian || '',
+              phone: liveMatch.phone || record.phone || '',
               presentCount: 0,
               absentCount: 0,
               lastSeen: null,
@@ -599,18 +661,24 @@
             };
           }
 
-          map[id].sessions.push({
+          const alreadyAddedThisSession = map[stableId].sessions.some(
+            item => item.date === session.sessionDate
+          );
+
+          if (alreadyAddedThisSession) return;
+
+          map[stableId].sessions.push({
             date: session.sessionDate,
             present: !!record.present
           });
 
           if (record.present) {
-            map[id].presentCount += 1;
-            if (!map[id].lastSeen || new Date(session.sessionDate) > new Date(map[id].lastSeen)) {
-              map[id].lastSeen = session.sessionDate;
+            map[stableId].presentCount += 1;
+            if (!map[stableId].lastSeen || new Date(session.sessionDate) > new Date(map[stableId].lastSeen)) {
+              map[stableId].lastSeen = session.sessionDate;
             }
           } else {
-            map[id].absentCount += 1;
+            map[stableId].absentCount += 1;
           }
         });
       });
@@ -654,7 +722,9 @@
         const q = query.toLowerCase();
         records = records.filter(item =>
           (item.fullName || '').toLowerCase().includes(q) ||
-          (item.memberNumber || '').toLowerCase().includes(q)
+          (item.memberNumber || '').toLowerCase().includes(q) ||
+          (item.phone || '').toLowerCase().includes(q) ||
+          (item.guardian || '').toLowerCase().includes(q)
         );
       }
 
