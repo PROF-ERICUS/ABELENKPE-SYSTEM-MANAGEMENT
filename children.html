@@ -471,11 +471,6 @@
           </div>
 
           <div class="field">
-            <label>Registered Number</label>
-            <input type="text" id="kidNumber" />
-          </div>
-
-          <div class="field">
             <label>Gender</label>
             <select id="kidGender" required>
               <option value="">Select gender</option>
@@ -501,7 +496,7 @@
 
           <div class="field">
             <label>Parent / Guardian Phone</label>
-            <input type="text" id="kidPhone" />
+            <input type="text" id="kidPhone" placeholder="0551234567 or +233551234567" />
           </div>
 
           <div class="field">
@@ -545,7 +540,7 @@
       <div class="card">
         <div class="toolbar">
           <div class="section-title">Search Children Records</div>
-          <input type="text" id="kidsSearchInput" class="search-input" placeholder="Search by name or number..." />
+          <input type="text" id="kidsSearchInput" class="search-input" placeholder="Search by child name, guardian phone, or parent/guardian member..." />
         </div>
         <div id="kidsSearchResults" class="empty-state">Search results will appear here.</div>
       </div>
@@ -571,7 +566,7 @@
         <button class="btn btn-success" id="openKidsAttendance">Open Attendance</button>
         <button class="btn btn-danger" id="closeKidsAttendance">Close Attendance</button>
         <button class="btn btn-light" id="markAllKids">Mark All Present</button>
-        <button class="btn btn-primary" id="printKidsReport">Print Kids Report</button>
+       <button class="btn btn-primary" id="printKidsReport">Print Children Report</button>
       </div>
 
       <div class="muted" style="margin-top:12px;">
@@ -607,6 +602,10 @@
     let kidsAttendanceHistory = JSON.parse(localStorage.getItem('church_kids_attendance_history') || '[]');
 
     let editingKidId = null;
+
+    function getChurchMembers() {
+      return JSON.parse(localStorage.getItem('church_members') || '[]');
+    }
 
     const kidsForm = document.getElementById('kidsForm');
     const kidsSearchInput = document.getElementById('kidsSearchInput');
@@ -685,6 +684,97 @@
       if (gender === 'male' || gender === 'm' || gender === 'boy') return 'Male';
       if (gender === 'female' || gender === 'f' || gender === 'girl') return 'Female';
       return '';
+    }
+
+    function normalizeWhatsAppNumber(phone) {
+      if (!phone) return '';
+
+      let digits = String(phone).replace(/\D/g, '');
+
+      if (digits.length === 10 && digits.startsWith('0')) {
+        digits = '233' + digits.slice(1);
+      } else if (digits.length === 9) {
+        digits = '233' + digits;
+      }
+
+      if (digits.length === 12 && digits.startsWith('233')) {
+        return digits;
+      }
+
+      return '';
+    }
+
+    function formatGuardianPhone(phone) {
+      const normalized = normalizeWhatsAppNumber(phone);
+      return normalized || (phone || '');
+    }
+
+    function getLinkedMemberData(phone) {
+      const normalizedPhone = normalizeWhatsAppNumber(phone || '');
+      if (!normalizedPhone) {
+        return {
+          linkedMemberId: '',
+          linkedMemberName: '',
+          linkedMemberNumber: ''
+        };
+      }
+
+      const members = getChurchMembers();
+      const matchedMember = members.find(member =>
+        normalizeWhatsAppNumber(member.phone || '') === normalizedPhone
+      );
+
+      if (!matchedMember) {
+        return {
+          linkedMemberId: '',
+          linkedMemberName: '',
+          linkedMemberNumber: ''
+        };
+      }
+
+      return {
+        linkedMemberId: matchedMember.id || '',
+        linkedMemberName: matchedMember.fullName || '',
+        linkedMemberNumber: matchedMember.memberNumber || ''
+      };
+    }
+
+    function applyLinkedMember(record) {
+      return {
+        ...record,
+        ...getLinkedMemberData(record.phone || '')
+      };
+    }
+
+    function normalizeExistingKidsPhones() {
+      let changed = false;
+
+      kidsRecords = kidsRecords.map(record => {
+        const normalizedPhone = normalizeWhatsAppNumber(record.phone || '');
+        const linkedData = getLinkedMemberData(normalizedPhone || record.phone || '');
+        const updatedRecord = {
+          ...record,
+          phone: normalizedPhone || record.phone || '',
+          linkedMemberId: linkedData.linkedMemberId,
+          linkedMemberName: linkedData.linkedMemberName,
+          linkedMemberNumber: linkedData.linkedMemberNumber
+        };
+
+        if (
+          updatedRecord.phone !== (record.phone || '') ||
+          updatedRecord.linkedMemberId !== (record.linkedMemberId || '') ||
+          updatedRecord.linkedMemberName !== (record.linkedMemberName || '') ||
+          updatedRecord.linkedMemberNumber !== (record.linkedMemberNumber || '')
+        ) {
+          changed = true;
+        }
+
+        return updatedRecord;
+      });
+
+      if (changed) {
+        saveKidsRecords();
+      }
     }
 
     function getCellValue(row, possibleKeys = []) {
@@ -792,8 +882,8 @@
 
       wrap.innerHTML = todayBirthdays.map(kid => {
         const message = `Happy birthday ${kid.name}. We celebrate you and pray for God’s blessings upon your life.`;
-        const phone = (kid.phone || '').replace(/[^0-9]/g, '');
-        const whatsapp = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}` : '';
+        const whatsappNumber = normalizeWhatsAppNumber(kid.phone || '');
+        const whatsapp = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}` : '';
 
         return `
           <div class="notice">
@@ -832,19 +922,19 @@
       }
 
       wrap.innerHTML = kidsRecords.map(record => {
-        const guardianPhone = (record.phone || '').replace(/[^0-9]/g, '');
+        const guardianPhone = normalizeWhatsAppNumber(record.phone || '');
         const followupMessage = `Hello, this is from church. We are checking on ${record.name}. God bless you.`;
         const whatsapp = guardianPhone ? `https://wa.me/${guardianPhone}?text=${encodeURIComponent(followupMessage)}` : '';
 
         return `
           <div class="record-card">
             <h4>${record.name}</h4>
-            <p class="muted">Number: ${record.number || 'N/A'}</p>
             <p class="muted">Gender: ${record.gender || 'N/A'}</p>
             <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
             <p class="muted">DOB: ${record.dob || 'N/A'}</p>
             <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
-            <p class="muted">Phone: ${record.phone || 'N/A'}</p>
+            <p class="muted">Guardian Phone: ${formatGuardianPhone(record.phone) || 'N/A'}</p>
+            <p class="muted">Parent/Guardian in Church Records: ${record.linkedMemberName ? `${record.linkedMemberName} (${record.linkedMemberNumber || 'Member'})` : 'No matching member found'}</p>
             <p class="muted">Address: ${record.address || 'N/A'}</p>
             <p class="muted">Note: ${record.note || 'N/A'}</p>
             <div class="btn-row" style="margin-top:10px;">
@@ -867,10 +957,20 @@
         return;
       }
 
-      const filtered = kidsRecords.filter(record =>
-        (record.name || '').toLowerCase().includes(query) ||
-        (record.number || '').toLowerCase().includes(query)
-      );
+      const cleanQuery = query.replace(/\s+/g, '');
+      const filtered = kidsRecords.filter(record => {
+        const childName = (record.name || '').toLowerCase();
+        const guardianPhone = formatGuardianPhone(record.phone || '').toLowerCase().replace(/\s+/g, '');
+        const guardianName = (record.guardian || '').toLowerCase();
+        const linkedMemberName = (record.linkedMemberName || '').toLowerCase();
+
+        return (
+          childName.includes(query) ||
+          guardianName.includes(query) ||
+          linkedMemberName.includes(query) ||
+          guardianPhone.includes(cleanQuery)
+        );
+      });
 
       if (!filtered.length) {
         wrap.innerHTML = '<p class="empty-state">No matching child record found.</p>';
@@ -880,10 +980,11 @@
       wrap.innerHTML = filtered.map(record => `
         <div class="record-card">
           <h4>${record.name}</h4>
-          <p class="muted">Number: ${record.number || 'N/A'}</p>
           <p class="muted">Gender: ${record.gender || 'N/A'}</p>
           <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
           <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
+          <p class="muted">Guardian Phone: ${formatGuardianPhone(record.phone) || 'N/A'}</p>
+          <p class="muted">Parent/Guardian in Church Records: ${record.linkedMemberName ? `${record.linkedMemberName} (${record.linkedMemberNumber || 'Member'})` : 'No matching member found'}</p>
         </div>
       `).join('');
     }
@@ -910,7 +1011,7 @@
 
       wrap.innerHTML = kidsRecords.map(kid => {
         const record = kidsAttendance.find(a => a.kidId === kid.id);
-        const guardianPhone = (kid.phone || '').replace(/[^0-9]/g, '');
+        const guardianPhone = normalizeWhatsAppNumber(kid.phone || '');
         const absentMessage = `Hello, ${kid.name} was absent from today's children attendance. Please let us know how the child is doing. God bless you.`;
         const absentWhatsapp = guardianPhone ? `https://wa.me/${guardianPhone}?text=${encodeURIComponent(absentMessage)}` : '';
 
@@ -919,6 +1020,7 @@
             <h4>${kid.name}</h4>
             <p class="muted">Class: ${kid.kidClass || 'N/A'}</p>
             <p class="muted">Guardian: ${kid.guardian || 'N/A'}</p>
+            <p class="muted">Parent/Guardian in Church Records: ${kid.linkedMemberName ? `${kid.linkedMemberName} (${kid.linkedMemberNumber || 'Member'})` : 'No matching member found'}</p>
             <p style="margin:8px 0;">
               <span class="pill ${record && record.present ? 'present' : 'absent'}">
                 ${record && record.present ? 'Present' : 'Absent'}
@@ -947,6 +1049,7 @@
     }
 
     function renderAll() {
+      normalizeExistingKidsPhones();
       ensureKidsAttendance();
       updateStats();
       renderBirthdayReminder();
@@ -961,12 +1064,12 @@
       e.preventDefault();
 
       const name = document.getElementById('kidName').value.trim();
-      const number = document.getElementById('kidNumber').value.trim();
       const gender = document.getElementById('kidGender').value;
       const kidClass = document.getElementById('kidClass').value.trim();
       const dob = document.getElementById('kidDob').value || null;
       const guardian = document.getElementById('kidGuardian').value.trim();
       const phone = document.getElementById('kidPhone').value.trim();
+      const normalizedPhone = phone ? normalizeWhatsAppNumber(phone) : '';
       const address = document.getElementById('kidAddress').value.trim();
       const note = document.getElementById('kidNote').value.trim();
       const fileInput = document.getElementById('kidFile');
@@ -975,24 +1078,34 @@
       let fileURL = '';
       let fileName = '';
 
+      if (phone && !normalizedPhone) {
+        alert('Please enter a valid Ghana parent or guardian phone number. Example: 0551234567 or +233551234567');
+        return;
+      }
+
       if (file) {
         fileURL = URL.createObjectURL(file);
         fileName = file.name;
       }
+
+      const linkedMemberData = getLinkedMemberData(normalizedPhone);
+      const resolvedGuardian = guardian || linkedMemberData.linkedMemberName || '';
 
       if (editingKidId) {
         const existing = kidsRecords.find(k => k.id === editingKidId);
         if (!existing) return;
 
         existing.name = name;
-        existing.number = number;
         existing.gender = gender;
         existing.kidClass = kidClass;
         existing.dob = dob;
-        existing.guardian = guardian;
-        existing.phone = phone;
+        existing.guardian = resolvedGuardian;
+        existing.phone = normalizedPhone;
         existing.address = address;
         existing.note = note;
+        existing.linkedMemberId = linkedMemberData.linkedMemberId;
+        existing.linkedMemberName = linkedMemberData.linkedMemberName;
+        existing.linkedMemberNumber = linkedMemberData.linkedMemberNumber;
 
         if (file) {
           existing.fileURL = fileURL;
@@ -1002,16 +1115,18 @@
         kidsRecords.push({
           id: Date.now(),
           name,
-          number,
           gender,
           kidClass,
           dob,
-          guardian,
-          phone,
+          guardian: resolvedGuardian,
+          phone: normalizedPhone,
           address,
           note,
           fileURL,
-          fileName
+          fileName,
+          linkedMemberId: linkedMemberData.linkedMemberId,
+          linkedMemberName: linkedMemberData.linkedMemberName,
+          linkedMemberNumber: linkedMemberData.linkedMemberNumber
         });
       }
 
@@ -1038,7 +1153,6 @@
       if (!record) return;
 
       document.getElementById('kidName').value = record.name || '';
-      document.getElementById('kidNumber').value = record.number || '';
       document.getElementById('kidGender').value = record.gender || '';
       document.getElementById('kidClass').value = record.kidClass || '';
       document.getElementById('kidDob').value = record.dob || '';
@@ -1084,11 +1198,13 @@
           return {
             kidId: kid.id,
             fullName: kid.name,
-            memberNumber: kid.number || '',
             gender: kid.gender || '',
             memberClass: kid.kidClass || '',
             guardian: kid.guardian || '',
             phone: kid.phone || '',
+            linkedMemberName: kid.linkedMemberName || '',
+            linkedMemberNumber: kid.linkedMemberNumber || '',
+            relationshipLabel: kid.linkedMemberName ? 'Parent/Guardian' : '',
             present: !!(record && record.present),
             type: 'Child'
           };
@@ -1158,30 +1274,30 @@
               <tr>
                 <td>${index + 1}</td>
                 <td>${kid.name}</td>
-                <td>${kid.number || 'N/A'}</td>
                 <td>${kid.gender || 'N/A'}</td>
                 <td>${kid.kidClass || 'N/A'}</td>
                 <td>${kid.guardian || 'N/A'}</td>
                 <td>${kid.phone || 'N/A'}</td>
+                <td>${kid.linkedMemberName ? `${kid.linkedMemberName} (${kid.linkedMemberNumber || 'Member'})` : 'Not linked'}</td>
                 <td>${attendanceRecord && attendanceRecord.present ? 'Present' : 'Absent'}</td>
               </tr>
             `;
           }).join('')
-        : `<tr><td colspan="8" style="text-align:center;">No children records available.</td></tr>`;
+        : `<tr><td colspan="9" style="text-align:center;">No children records available.</td></tr>`;
 
       const logoMarkup = CHURCH_LOGO
         ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="report-logo">`
         : `<div class="report-logo" style="display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;">LOGO</div>`;
 
       printArea.innerHTML = `
-        <div class="report-header">
-          ${logoMarkup}
-          <div class="report-title-wrap">
-            <h2>${CHURCH_NAME}</h2>
-            <p><strong>Official Children Attendance Report</strong></p>
-            <p>Date: ${formatDisplayDate(new Date().toISOString())}</p>
-          </div>
-        </div>
+  <div class="report-header">
+    ${logoMarkup}
+    <div class="report-title-wrap">
+      <h2>${CHURCH_NAME}</h2>
+      <p><strong>Official Children Report</strong></p>
+      <p>Date: ${formatDisplayDate(new Date().toISOString())}</p>
+    </div>
+  </div>
 
         <div class="report-summary">
           <div class="summary-box">
@@ -1223,11 +1339,11 @@
             <tr>
               <th>#</th>
               <th>Full Name</th>
-              <th>Number</th>
               <th>Gender</th>
               <th>Class</th>
               <th>Guardian</th>
               <th>Phone</th>
+              <th>Linked Member</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -1269,12 +1385,11 @@
       const templateData = [
         {
           'Full Name': 'Ama Boateng',
-          'Registered Number': 'K001',
           'Gender': 'Female',
           'Class / Group': 'Children Class A',
           'Date of Birth': '2017-05-14',
           'Parent / Guardian Name': 'Mrs Boateng',
-          'Parent / Guardian Phone': '0240000000',
+          'Parent / Guardian Phone': '233240000000',
           'Address': 'Accra',
           'Medical / Special Note': 'None'
         }
@@ -1315,12 +1430,12 @@
 
           rows.forEach(row => {
             const name = getCellValue(row, ['Full Name', 'Name', 'FullName', 'full name', 'name']);
-            const number = getCellValue(row, ['Registered Number', 'Number', 'Reg Number', 'ID', 'registered number']);
             const rawGender = getCellValue(row, ['Gender', 'gender']);
             const kidClass = getCellValue(row, ['Class / Group', 'Class', 'Group', 'class / group']);
             const dobRaw = getCellValue(row, ['Date of Birth', 'DOB', 'Birth Date', 'date of birth']);
             const guardian = getCellValue(row, ['Parent / Guardian Name', 'Guardian', 'Parent Name', 'guardian']);
             const phone = getCellValue(row, ['Parent / Guardian Phone', 'Phone', 'Guardian Phone', 'parent / guardian phone']);
+            const normalizedPhone = phone ? normalizeWhatsAppNumber(phone) : '';
             const address = getCellValue(row, ['Address', 'address']);
             const note = getCellValue(row, ['Medical / Special Note', 'Note', 'Medical Note', 'medical / special note']);
 
@@ -1329,12 +1444,19 @@
               return;
             }
 
+            if (phone && !normalizedPhone) {
+              skippedCount++;
+              return;
+            }
+
             const gender = normalizeGender(rawGender);
             const dob = excelDateToISO(dobRaw);
+            const linkedMemberData = getLinkedMemberData(normalizedPhone);
+            const resolvedGuardian = guardian || linkedMemberData.linkedMemberName || '';
 
             const duplicate = kidsRecords.find(kid =>
-              (number && kid.number && kid.number.toLowerCase() === number.toLowerCase()) ||
-              ((kid.name || '').toLowerCase() === name.toLowerCase() && (kid.guardian || '').toLowerCase() === guardian.toLowerCase())
+              ((kid.name || '').toLowerCase() === name.toLowerCase() && (kid.guardian || '').toLowerCase() === resolvedGuardian.toLowerCase()) ||
+              (normalizedPhone && normalizeWhatsAppNumber(kid.phone || '') === normalizedPhone && (kid.name || '').toLowerCase() === name.toLowerCase())
             );
 
             if (duplicate) {
@@ -1345,16 +1467,18 @@
             kidsRecords.push({
               id: Date.now() + Math.floor(Math.random() * 100000),
               name,
-              number,
               gender,
               kidClass,
               dob,
-              guardian,
-              phone,
+              guardian: resolvedGuardian,
+              phone: normalizedPhone,
               address,
               note,
               fileURL: '',
-              fileName: ''
+              fileName: '',
+              linkedMemberId: linkedMemberData.linkedMemberId,
+              linkedMemberName: linkedMemberData.linkedMemberName,
+              linkedMemberNumber: linkedMemberData.linkedMemberNumber
             });
 
             importedCount++;
@@ -1380,6 +1504,7 @@
       reader.readAsArrayBuffer(file);
     });
 
+    normalizeExistingKidsPhones();
     renderAll();
   </script>
 </body>
