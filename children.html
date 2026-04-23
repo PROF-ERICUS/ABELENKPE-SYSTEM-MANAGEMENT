@@ -705,8 +705,7 @@
     }
 
     function formatGuardianPhone(phone) {
-      const normalized = normalizeWhatsAppNumber(phone);
-      return normalized || (phone || '');
+      return normalizeWhatsAppNumber(phone) || '';
     }
 
     function getLinkedMemberData(phone) {
@@ -933,7 +932,7 @@
             <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
             <p class="muted">DOB: ${record.dob || 'N/A'}</p>
             <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
-            <p class="muted">Guardian Phone: ${formatGuardianPhone(record.phone) || 'N/A'}</p>
+            <p class="muted">Guardian Phone: ${record.phone || 'N/A'}</p>
             <p class="muted">Parent/Guardian in Church Records: ${record.linkedMemberName ? `${record.linkedMemberName} (${record.linkedMemberNumber || 'Member'})` : 'No matching member found'}</p>
             <p class="muted">Address: ${record.address || 'N/A'}</p>
             <p class="muted">Note: ${record.note || 'N/A'}</p>
@@ -948,46 +947,88 @@
       }).join('');
     }
 
-    function renderSearchResults() {
-      const query = kidsSearchInput.value.trim().toLowerCase();
-      const wrap = document.getElementById('kidsSearchResults');
+ function renderSearchResults() {
+  const rawQuery = kidsSearchInput.value.trim();
+  const query = rawQuery.toLowerCase();
+  const wrap = document.getElementById('kidsSearchResults');
 
-      if (!query) {
-        wrap.innerHTML = '<p class="empty-state">Search results will appear here.</p>';
-        return;
-      }
+  if (!query) {
+    wrap.innerHTML = '<p class="empty-state">Search results will appear here.</p>';
+    return;
+  }
 
-      const cleanQuery = query.replace(/\s+/g, '');
-      const filtered = kidsRecords.filter(record => {
-        const childName = (record.name || '').toLowerCase();
-        const guardianPhone = formatGuardianPhone(record.phone || '').toLowerCase().replace(/\s+/g, '');
-        const guardianName = (record.guardian || '').toLowerCase();
-        const linkedMemberName = (record.linkedMemberName || '').toLowerCase();
+  const members = getChurchMembers();
 
-        return (
-          childName.includes(query) ||
-          guardianName.includes(query) ||
-          linkedMemberName.includes(query) ||
-          guardianPhone.includes(cleanQuery)
-        );
-      });
+  const filtered = kidsRecords.filter(record => {
+    const childName = (record.name || '').toLowerCase();
+    const guardianName = (record.guardian || '').toLowerCase();
+    const linkedMemberName = (record.linkedMemberName || '').toLowerCase();
 
-      if (!filtered.length) {
-        wrap.innerHTML = '<p class="empty-state">No matching child record found.</p>';
-        return;
-      }
+    // 🔥 child phone
+    const childPhone = record.phone || '';
 
-      wrap.innerHTML = filtered.map(record => `
-        <div class="record-card">
-          <h4>${record.name}</h4>
-          <p class="muted">Gender: ${record.gender || 'N/A'}</p>
-          <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
-          <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
-          <p class="muted">Guardian Phone: ${formatGuardianPhone(record.phone) || 'N/A'}</p>
-          <p class="muted">Parent/Guardian in Church Records: ${record.linkedMemberName ? `${record.linkedMemberName} (${record.linkedMemberNumber || 'Member'})` : 'No matching member found'}</p>
-        </div>
-      `).join('');
-    }
+    // 🔥 linked member phone (VERY IMPORTANT FIX)
+    const linkedMember = members.find(m =>
+      String(m.id) === String(record.linkedMemberId) ||
+      normalizeWhatsAppNumber(m.phone) === normalizeWhatsAppNumber(childPhone)
+    );
+
+    const memberPhone = linkedMember ? (linkedMember.phone || '') : '';
+
+    // 🔥 strong phone matching (all formats)
+    const matchPhone =
+      phoneMatchesSearch(rawQuery, childPhone) ||
+      phoneMatchesSearch(rawQuery, memberPhone);
+
+    return (
+      childName.includes(query) ||
+      guardianName.includes(query) ||
+      linkedMemberName.includes(query) ||
+      matchPhone
+    );
+  });
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<p class="empty-state">No matching child record found.</p>';
+    return;
+  }
+
+  wrap.innerHTML = filtered.map(record => {
+    const members = getChurchMembers();
+
+    const linkedMember = members.find(m =>
+      String(m.id) === String(record.linkedMemberId) ||
+      normalizeWhatsAppNumber(m.phone) === normalizeWhatsAppNumber(record.phone)
+    );
+
+    const phoneToUse = record.phone || (linkedMember?.phone || '');
+    const whatsappPhone = normalizeWhatsAppNumber(phoneToUse);
+
+    return `
+      <div class="record-card">
+        <h4>${record.name}</h4>
+        <p class="muted">Gender: ${record.gender || 'N/A'}</p>
+        <p class="muted">Class: ${record.kidClass || 'N/A'}</p>
+        <p class="muted">Guardian: ${record.guardian || 'N/A'}</p>
+        <p class="muted">Guardian Phone: ${phoneToUse || 'N/A'}</p>
+        <p class="muted">
+          Parent/Guardian in Church Records:
+          ${record.linkedMemberName
+            ? `${record.linkedMemberName} (${record.linkedMemberNumber || 'Member'})`
+            : 'No matching member found'}
+        </p>
+
+        ${whatsappPhone ? `
+          <div class="btn-row" style="margin-top:10px;">
+            <a class="btn btn-success" href="https://wa.me/${whatsappPhone}" target="_blank">
+              WhatsApp Guardian
+            </a>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
 
     function renderAttendanceMeta() {
       const pill = document.getElementById('kidsAttendancePill');
@@ -1506,6 +1547,34 @@
 
     normalizeExistingKidsPhones();
     renderAll();
+
+    function phoneMatchesSearch(searchValue, phoneValue) {
+  if (!searchValue || !phoneValue) return false;
+
+  const cleanSearch = String(searchValue).replace(/\D/g, '');
+  const cleanPhone = String(phoneValue).replace(/\D/g, '');
+
+  // convert search to Ghana format
+  let search233 = '';
+  let search0 = '';
+
+  if (cleanSearch.startsWith('0')) {
+    search233 = '233' + cleanSearch.slice(1);
+    search0 = cleanSearch;
+  } else if (cleanSearch.startsWith('233')) {
+    search233 = cleanSearch;
+    search0 = '0' + cleanSearch.slice(3);
+  } else if (cleanSearch.length === 9) {
+    search233 = '233' + cleanSearch;
+    search0 = '0' + cleanSearch;
+  }
+
+  return (
+    cleanPhone.includes(cleanSearch) ||
+    cleanPhone.includes(search233) ||
+    cleanPhone.includes(search0)
+  );
+}
   </script>
 </body>
 </html>
