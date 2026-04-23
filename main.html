@@ -1883,7 +1883,10 @@ td, th {
       wrap.innerHTML = absentees.map(member => {
         const phone = member.phone || 'No phone number';
         const message = `Hello ${member.fullName}, we missed you at church attendance today. We hope you are fine. Please let us know how you are doing. God bless you.`;
-        const whatsappLink = member.phone ? `https://wa.me/${member.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(message)}` : '#';
+        const whatsappNumber = normalizeWhatsAppNumber(member.phone);
+const whatsappLink = whatsappNumber
+  ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+  : '#';
         return `
           <div class="member-card">
             <h4>${member.fullName}</h4>
@@ -2483,6 +2486,33 @@ if(window.location.search.includes("refresh=1")){
 document.getElementById('switchRecycleBinView').addEventListener('click', () => {
   window.location.href = 'recycle-bin.html';
 });
+function normalizeWhatsAppNumber(phone) {
+  if (!phone) return '';
+
+  let digits = String(phone).replace(/\D/g, '');
+
+  // Ghana local format: 0XXXXXXXXX -> 233XXXXXXXXX
+  if (digits.length === 10 && digits.startsWith('0')) {
+    digits = '233' + digits.slice(1);
+  }
+
+  // Ghana format already without +
+  if (digits.length === 12 && digits.startsWith('233')) {
+    return digits;
+  }
+
+  // If user typed +233..., removing non-digits already gives 233...
+  if (digits.length === 12 && digits.startsWith('233')) {
+    return digits;
+  }
+
+  // Optional: handle numbers wrongly entered as 9 digits without leading 0
+  if (digits.length === 9) {
+    digits = '233' + digits;
+  }
+
+  return digits;
+}
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
