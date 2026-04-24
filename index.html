@@ -694,7 +694,7 @@
             </div>
           </div>
 
-          <div class="eyebrow">You are welcome</div>
+          <div class="eyebrow">You are welcome to</div>
           <h1 class="title" id="churchTitle">Welcome to Our Church</h1>
 
           <p class="subtitle">
@@ -780,20 +780,20 @@
   </div>
 
   <script>
-    const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST";
+    const CHURCH_NAME = "SEVENTH-DAY ADVENTIST CHURCH-ABELENKPE ";
     const CHURCH_LOGO = "sda logo.png";
 
     const CHURCH_SERVICE_SCHEDULE = [
       {
         day: "Saturday",
-        time: "20:00",
+        time: "08:00",
         title: "Sabbath Service",
         details: "Main Sabbath worship service."
       },
       {
         day: "Sunday",
         time: "19:00",
-        title: "Bible Teaching",
+        title: "Bible Studies",
         details: "Bible teaching and spiritual growth session."
       },
       {
@@ -801,6 +801,12 @@
         time: "19:00",
         title: "Midweek Prayer",
         details: "Midweek prayer meeting and fellowship."
+      },
+      {
+        day: "Friday",
+        time: "18:00",
+        title: "Vesper Service",
+        details: "Welcoming the holy Sabbath."
       }
     ];
 
@@ -813,7 +819,7 @@
     const switchAdminView = document.getElementById("switchAdminView");
     const themeToggle = document.getElementById("themeToggle");
 
-    churchTitle.textContent = `Welcome to ${CHURCH_NAME}`;
+    churchTitle.textContent = ` ${CHURCH_NAME}`;
 
     logoWrap.innerHTML = CHURCH_LOGO
       ? `<img src="${CHURCH_LOGO}" alt="Church Logo" class="logo">`
