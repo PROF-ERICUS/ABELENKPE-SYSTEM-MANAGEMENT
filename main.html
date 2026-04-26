@@ -797,7 +797,7 @@ td, th {
               </div>
               <div class="field">
                 <label>Church Serial Number</label>
-                <input type="text" id="memberNumber" placeholder="Auto-generated e.g. SDA001" readonly />
+                <input type="text" id="memberNumber" placeholder="Auto-generated e.g. A-SDA001" readonly />
               </div>
               <div class="field">
                 <label>Gender</label>
@@ -1261,16 +1261,16 @@ td, th {
       const serialNumbers = members
         .map(member => String(member.memberNumber || '').trim().toUpperCase())
         .map(number => {
-          const match = number.match(/^SDA(\d+)$/);
+          const match = number.match(/^A-SDA(\d+)$/);
           return match ? parseInt(match[1], 10) : 0;
         });
 
       const highest = serialNumbers.length ? Math.max(...serialNumbers) : 0;
-      return `SDA${String(highest + 1).padStart(3, '0')}`;
+      return `A-SDA${String(highest + 1).padStart(3, '0')}`;
     }
 
     function isChurchSerial(value) {
-      return /^SDA\d+$/i.test(String(value || '').trim());
+      return /^A-SDA\d+$/i.test(String(value || '').trim());
     }
 
     function normalizeMemberRow(member) {
