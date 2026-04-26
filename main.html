@@ -1388,9 +1388,11 @@ td, th {
         alert(`Member saved successfully. Church serial number: ${memberNumber}`);
       }
 
-      saveMembers();
-      resetMemberEditState();
-      renderAll();
+      arrangeMembersAlphabeticallyAndResetSerials();
+
+saveMembers();
+resetMemberEditState();
+renderAll();
     });
 
     memberSelfRegisterForm.addEventListener('submit', (e) => {
@@ -1432,8 +1434,11 @@ td, th {
         note
       });
 
-      saveMembers();
-      memberSelfRegisterForm.reset();
+      arrangeMembersAlphabeticallyAndResetSerials();
+
+saveMembers();
+memberSelfRegisterForm.reset();
+
       const selfMemberNumberField = document.getElementById('selfMemberNumber');
       if (selfMemberNumberField) selfMemberNumberField.value = '';
       renderAll();
@@ -2726,6 +2731,18 @@ document.getElementById('deleteAllMembersBtn').addEventListener('click', () => {
 
   alert('All members have been moved to recycle bin.');
 });
+
+function arrangeMembersAlphabeticallyAndResetSerials() {
+  members.sort((a, b) =>
+    String(a.fullName || '').localeCompare(String(b.fullName || ''))
+  );
+
+  members.forEach((member, index) => {
+    member.memberNumber = `SDA${String(index + 1).padStart(3, '0')}`;
+  });
+
+  saveMembers();
+}
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
