@@ -711,6 +711,7 @@ td, th {
   <button class="btn btn-light" id="switchTrendView">Trend View</button>
   <button class="btn btn-light" id="switchVisitorsView">Visitors View</button>
   <button class="btn btn-light" id="switchRecycleBinView">Recycle Bin</button>
+  <button class="btn btn-light" id="switchSabbathSchoolView">Sabbath School Class</button>
 
   <button class="btn btn-danger hidden" id="adminLogoutBtn">Logout</button>
 
@@ -2661,6 +2662,10 @@ if(window.location.search.includes("refresh=1")){
 document.getElementById('switchRecycleBinView').addEventListener('click', () => {
   window.location.href = 'recycle-bin.html';
 });
+document.getElementById('switchSabbathSchoolView').addEventListener('click', () => {
+  window.location.href = 'sabbath-school.html';
+});
+
 function normalizeWhatsAppNumber(phone) {
   if (!phone) return '';
 
