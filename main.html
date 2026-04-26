@@ -1118,6 +1118,30 @@ td, th {
       saveMemberAttendanceHistory();
     }
 
+    function updateArchivedAttendanceSession() {
+  if (!attendanceClosedAt) return;
+
+  const sessionDate = new Date(attendanceClosedAt).toISOString().split('T')[0];
+
+  const session = memberAttendanceHistory.find(entry => entry.sessionDate === sessionDate);
+  if (!session) return;
+
+  session.records = members.map(member => {
+    const record = attendance.find(a => a.memberId === member.id);
+
+    return {
+      memberId: member.id,
+      fullName: member.fullName,
+      memberNumber: member.memberNumber,
+      gender: member.gender || '',
+      memberClass: member.memberClass || '',
+      present: !!(record && record.present)
+    };
+  });
+
+  saveMemberAttendanceHistory();
+}
+
     const CHURCH_NAME = "ABELENKPE SEVENTH-DAY ADVENTIST CHURCH";
     const CHURCH_LOGO = "sda logo.png";
 
@@ -1805,7 +1829,7 @@ td, th {
             <td>${member.memberClass}</td>
             <td><span class="pill ${record && record.present ? 'present' : 'absent'}">${record && record.present ? 'Present' : 'Absent'}</span></td>
             <td>
-              <button class="btn ${record && record.present ? 'btn-light' : 'btn-success'}" ${attendanceOpen ? '' : 'disabled'} onclick="toggleAttendance(${member.id})">
+             <button class="btn ${record && record.present ? 'btn-light' : 'btn-success'}" onclick="toggleAttendance(${member.id})">
                 ${record && record.present ? 'Undo' : 'Mark Present'}
               </button>
             </td>
@@ -1814,16 +1838,31 @@ td, th {
       }).join('') || '<tr><td colspan="5" class="muted">No members available.</td></tr>';
     }
 
-    window.toggleAttendance = function(memberId) {
-      if (!attendanceOpen) {
-        alert('Attendance is closed.');
-        return;
-      }
-      const record = attendance.find(a => a.memberId === memberId);
-      if (record) record.present = !record.present;
-      saveAttendance();
-      renderAll();
-    }
+   window.toggleAttendance = function(memberId) {
+  const record = attendance.find(a => a.memberId === memberId);
+
+  if (record) {
+    record.present = !record.present;
+  } else {
+    attendance.push({
+      memberId,
+      present: true
+    });
+  }
+
+  saveAttendance();
+
+  // If attendance is already closed, update the saved history too
+  if (!attendanceOpen) {
+    updateArchivedAttendanceSession();
+  }
+
+  renderAll();
+
+  if (!attendanceOpen) {
+    renderAbsentees();
+  }
+}
 
     document.getElementById('openAttendanceBtn').addEventListener('click', () => {
       attendanceOpen = true;
