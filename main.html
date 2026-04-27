@@ -827,8 +827,12 @@ td, th {
               <div class="btn-row">
                 <button type="submit" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
                 <button type="button" class="btn btn-light" id="cancelMemberEditBtn" style="display:none;">Cancel Edit</button>
+                <button class="btn btn-success" id="downloadMembersExcelBtn" type="button">
+  Download Members Excel
+</button>
               </div>
             </form>
+            
 
             <div class="bulk-box">
               <div class="section-title">Bulk Upload Members (Excel / CSV)</div>
@@ -845,6 +849,7 @@ td, th {
 </p>
             </div>
           </div>
+          
 
           <div class="card">
             <div class="section-title">Registered Members</div>
@@ -852,6 +857,7 @@ td, th {
           </div>
         </div>
       </section>
+      
 
       <section class="section" id="member-home">
         <div class="grid-2">
@@ -2748,6 +2754,53 @@ function arrangeMembersAlphabeticallyAndResetSerials() {
 
   saveMembers();
 }
+function downloadMembersExcel() {
+  if (!members.length) {
+    alert('No registered members to download.');
+    return;
+  }
+
+  const headers = [
+    'Church Serial Number',
+    'Full Name',
+    'Gender',
+    'Sabbath School Class',
+    'Date of Birth',
+    'Phone Number',
+    'Note'
+  ];
+
+  const rows = members.map(member => [
+    member.memberNumber || '',
+    member.fullName || '',
+    member.gender || '',
+    member.memberClass || '',
+    member.dob || '',
+    member.phone || '',
+    member.note || ''
+  ]);
+
+  let csvContent = headers.join(',') + '\n';
+
+  rows.forEach(row => {
+    csvContent += row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',') + '\n';
+  });
+
+  const blob = new Blob([csvContent], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const link = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+
+  link.href = URL.createObjectURL(blob);
+  link.download = `registered-members-${date}.csv`;
+  link.click();
+
+  URL.revokeObjectURL(link.href);
+}
+
+document.getElementById('downloadMembersExcelBtn').addEventListener('click', downloadMembersExcel);
   </script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
